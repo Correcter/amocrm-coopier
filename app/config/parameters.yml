@@ -1,0 +1,16 @@
+# This file is auto-generated during the composer install
+parameters:
+    locale: ru
+    secret: 1cff313fe2c7ea760869c89ead447314
+    database_host: icontextdev.ru
+    database_port: 3306
+    database_name: yandex_handbook
+    database_user: yandex_handbook
+    database_password: jHGkhIOgvhjFYUFH
+    yd_host: 'https://yandex.ru'
+    yd_companies: /sprav/companies
+    yd_geoproduct: /business/geoproduct-frame/
+    yd_report_link: /business/geoproduct/api/geoproduct/get-total-company-statistic-v3
+    company.login: sunlight-reg
+    company.password: 5553%lmmVu7ITMY0g1
+    yd_login_host: 'https://passport.yandex.ru/auth/'
