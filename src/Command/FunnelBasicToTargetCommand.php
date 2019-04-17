@@ -1,6 +1,6 @@
 <?php
 
-namespace HandBookBundle\Command;
+namespace AmoCrm\Command;
 
 use AmoCrm\Exceptions\AuthError;
 use AmoCrm\Exceptions\MissingParams;
@@ -11,12 +11,11 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @author Vitaly Dergunov (<v.dergunov@icontext.ru>)
  */
-class FunnelTargetToBasicCommand extends AbstractCommand
+class FunnelBasicToTargetCommand extends AbstractCommands
 {
     /**
      * @var AuthRequest
@@ -80,8 +79,22 @@ class FunnelTargetToBasicCommand extends AbstractCommand
     public function execute(InputInterface $input, OutputInterface $output)
     {
         try {
-            $this->amoBasicAuth();
+            $this->authRequest->createClient('basicHost');
+            $this->amoAuth('basicLogin', 'basicHash');
+            $this->funnelRequest->createClient('basicHost');
+            $basicFunnel = $this->amoFunnel();
 
+            dump($basicFunnel);
+            exit;
+
+            $this->authRequest->clearAuth();
+
+            $this->authRequest->createClient('targetHost');
+            $this->amoAuth('targetLogin', 'targetHash');
+            $this->funnelRequest->createClient('targetHost');
+            $targetFunnel = $this->amoFunnel();
+
+            exit;
             $this->logger->info('Создание отчета успешно завершено. Всего файлов: %s');
         } catch (MissingParams $exc) {
             echo $exc->getMessage();
@@ -89,21 +102,24 @@ class FunnelTargetToBasicCommand extends AbstractCommand
     }
 
     /**
-     * @throws AuthError
+     * @param null $login
+     * @param null $hash
      *
-     * @return bool
+     * @throws AuthError
      */
-    private function amoBasicAuth()
+    private function amoAuth($login = null, $hash = null)
     {
-        $jsonResponse = $this->authRequest
-            ->createClient('basicHost')
-            ->auth('basicLogin', 'basicHash')
-            ->getBody()
-            ->getContents();
+        $jsonResponse =
+            $this->authRequest
+                ->auth($login, $hash)
+                ->getBody()
+                ->getContents();
 
-        $response = \GuzzleHttp\json_decode($jsonResponse, true);
+        $objectResponse = new \AmoCrm\Response\AuthResponse(
+            \GuzzleHttp\json_decode($jsonResponse, true)
+        );
 
-        if ('true' !== $response['auth']) {
+        if (true !== $objectResponse->getAuth()) {
             throw new AuthError('Авторизация завершилась неудачей. Пожалуйста, проверьте данные формы');
         }
 
@@ -113,23 +129,29 @@ class FunnelTargetToBasicCommand extends AbstractCommand
     }
 
     /**
-     * @param null|int $company
-     *
-     * @throws MissingParams
-     *
-     * @return bool|string
+     * @return array|mixed
      */
-    private function amoBasicFunnelSynch()
+    private function amoFunnel(): array
     {
-        $this->funnelRequest->createClient('basicHost');
-        $this->funnelRequest->getFunnel()->getBody()->getContents();
-    }
+        $jsonResponse =
+            $this->funnelRequest
+                ->getFunnel()
+                ->getBody()
+                ->getContents();
 
-    /**
-     * @param null|string $companyStat
-     */
-    private function writeToReport(string $companyStat = null)
-    {
-        $this->reportManager->writeExcel($companyStat, true);
+        $basicFunnels = new \AmoCrm\Response\FunnelResponse(
+            \GuzzleHttp\json_decode($jsonResponse, true)
+        );
+
+        foreach ($basicFunnels->getItems() as $funnel) {
+            if ('iCTurbo' === $funnel['name']) {
+                return $funnel;
+            }
+            unset($funnel);
+        }
+
+        unset($jsonResponse, $basicFunnels);
+
+        return [];
     }
 }

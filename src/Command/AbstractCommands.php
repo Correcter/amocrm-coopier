@@ -1,6 +1,6 @@
 <?php
 
-namespace HandBookBundle\Command;
+namespace AmoCrm\Command;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -8,7 +8,7 @@ use Symfony\Component\Console\Command\Command;
 /**
  * @author Vitaly Dergunov (<v.dergunov@icontext.ru>)
  */
-abstract class AbstractCommand extends Command
+abstract class AbstractCommands extends Command
 {
     /**
      * @var LoggerInterface

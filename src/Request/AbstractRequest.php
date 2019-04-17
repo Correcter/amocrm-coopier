@@ -353,6 +353,16 @@ abstract class AbstractRequest
     }
 
     /**
+     * @return AbstractRequest
+     */
+    public function clearCookie(): self
+    {
+        $this->cookie = new CookieJar();
+
+        return $this;
+    }
+
+    /**
      * @return bool
      */
     public function isVerify(): bool

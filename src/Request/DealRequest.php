@@ -2,6 +2,7 @@
 
 namespace AmoCrm\Request;
 
+use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**
@@ -22,61 +23,46 @@ class DealRequest extends AbstractRequest
     }
 
     /**
-     * @param array $params
-     *
-     * @return mixed
+     * @return Response
      */
-    public function leadForm(array $params = [])
+    public function getDeals(int $pipelineId = null): Response
     {
-        $this->requestBuilder->setRequstUri(
-            sprintf(
-                '%1$sok/lead_ads/forms.json',
-                $this->requestBuilder->getApiVer()
-            )
+        $this->setRequstUri(
+            $this->parameterBag->get('dealGet')
         );
-        $this->requestBuilder->setHttpMethod('GET');
-        $this->requestBuilder->setQueryParams(
-            array_merge([
-                'fields' => 'form_id,banner_ids,campaign_ids',
-//                '_campaign_id__in' => '',
-//                '_campaign_id' => '',
-//                '_banner_id__in' => '',
-//                '_banner_id' => '',
-            ], $params)
-        );
+        $this->setQueryParams([
+            'limit_rows' => 100,
+            'with' => 'name',
+        ]);
+        $this->setHttpMethod('GET');
 
-        return $this->requestBuilder->request();
+        $requestBody = $this->request()->getBody();
+
+        while (!$requestBody->eof()) {
+            // Read a line from the stream
+            $line = $requestBody->read(1024);
+            // JSON decode the line of data
+            $data = json_decode($line, true);
+            dump($data);
+            exit;
+        }
     }
 
     /**
      * @param array $params
+     * @param null  $method
      *
-     * @return \GuzzleHttp\Psr7\Response
+     * @return Response
      */
-    public function leadInfo(array $params = [])
+    public function addDeal(array $params = [], $method = null)
     {
-        $params = array_merge([
-            'form_id' => 0,
-//            '_created_time__lt' => '',
-//            '_created_time__gt' => '',
-//            '_created_time__lte' => '',
-//            '_created_time__gte' => '',
-//            '_campaign_id__in' => '',
-//            '_campaign_id' => '',
-//            '_banner_id__in' => '',
-//            '_banner_id' => '',
-        ], $params);
-
-        $this->requestBuilder->setHttpMethod('GET');
-        $this->requestBuilder->setQueryParams($params);
-        $this->requestBuilder->setRequstUri(
-            sprintf(
-                '%1$sok/lead_ads/%2$s.json',
-                $this->requestBuilder->getApiVer(),
-                $params['form_id']
-            )
+        $this->setRequstUri('/private/api/v2/json/pipelines/set');
+        $this->setHttpMethod($method);
+        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
+        $this->setBody(
+            \GuzzleHttp\json_encode($params, JSON_UNESCAPED_UNICODE)
         );
 
-        return $this->requestBuilder->request();
+        return $this->request();
     }
 }

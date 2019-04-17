@@ -33,6 +33,7 @@ class AuthRequest extends AbstractRequest
         $this->setRequstUri(
            $this->parameterBag->get('authPost')
         );
+
         $this->setHttpMethod('POST');
         $this->setFormParams([
             'USER_LOGIN' => $this->parameterBag->get($loginType),
@@ -43,5 +44,15 @@ class AuthRequest extends AbstractRequest
         ]);
 
         return $this->request();
+    }
+
+    /**
+     * @return AuthRequest
+     */
+    public function clearAuth(): self
+    {
+        $this->clearCookie();
+
+        return $this;
     }
 }

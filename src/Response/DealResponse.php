@@ -2,107 +2,43 @@
 
 namespace AmoCrm\Response;
 
+use Doctrine\Common\Collections\ArrayCollection;
+
 /**
- * Description of LeadForm.
+ * Description of DealResponse.
  *
  * @author Vitaly Dergunov <v.dergunov@icontext.ru>
  */
 class DealResponse
 {
     /**
-     * @var int[]
+     * @var null|ArrayCollection
      */
-    private $bannerIds;
+    private $items;
 
     /**
-     * @var int[]
-     */
-    private $campaignIds;
-
-    /**
-     * @var int
-     */
-    private $formId;
-
-    /**
-     * LeadForm constructor.
+     * LeadInfo constructor.
      *
      * @param array $mapData
      */
     public function __construct(array $mapData = [])
     {
-        $this->bannerIds = [];
-        $this->campaignIds = [];
-
-        foreach ($mapData as $key => $val) {
-            $key = lcfirst(str_replace('_', '', ucwords($key, '_')));
-            if (property_exists(__CLASS__, $key)) {
-                $this->{$key} = $val;
+        if (!isset($mapData['_embedded']['items'])) {
+            throw new \RuntimeException('Невалидный ответ от сервера!');
+        }
+        $this->items = new ArrayCollection();
+        foreach ($mapData['_embedded']['items'] as $key => $val) {
+            if (!$this->items->contains($val)) {
+                $this->items->set((int) $key, $val);
             }
         }
     }
 
     /**
-     * @return int[]
+     * @return ArrayCollection
      */
-    public function getBannerIds(): array
+    public function getItems(): ArrayCollection
     {
-        return $this->bannerIds;
-    }
-
-    /**
-     * @param null|int $bannerId
-     *
-     * @return LeadForm
-     */
-    public function addBannerId(int $bannerId = null): self
-    {
-        if (!isset($this->bannerIds[$bannerId])) {
-            $this->bannerIds[$bannerId] = $bannerId;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return int[]
-     */
-    public function getCampaignIds(): array
-    {
-        return $this->campaignIds;
-    }
-
-    /**
-     * @param null|int $campaignId
-     *
-     * @return LeadForm
-     */
-    public function addCampaignId(int $campaignId = null): self
-    {
-        if (!isset($this->campaignIds[$campaignId])) {
-            $this->campaignIds[$campaignId] = $campaignId;
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getFormId(): int
-    {
-        return $this->formId;
-    }
-
-    /**
-     * @param int $formId
-     *
-     * @return LeadForm
-     */
-    public function setFormId(int $formId): self
-    {
-        $this->formId = $formId;
-
-        return $this;
+        return $this->items;
     }
 }
