@@ -2,6 +2,7 @@
 
 namespace AmoCrm\Request;
 
+use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**
@@ -22,7 +23,7 @@ class FunnelRequest extends AbstractRequest
     }
 
     /**
-     * @return \GuzzleHttp\Psr7\Response
+     * @return Response
      */
     public function getFunnel()
     {
@@ -31,7 +32,36 @@ class FunnelRequest extends AbstractRequest
         );
         $this->setHttpMethod('GET');
         $this->addHeader('Content-Type', 'application/json; charset=utf-8');
+
         return $this->request();
+    }
+
+    /**
+     * @param null|Response $response
+     * @param null|string   $funnelName
+     *
+     * @return null|int
+     */
+    public function getFunnelIdByFunnelName(Response $response = null, string $funnelName = null)
+    {
+        $basicFunnels = new \AmoCrm\Response\DealResponse(
+            \GuzzleHttp\json_decode(
+                $response->getBody()->getContents(),
+                true
+            )
+        );
+
+        // iConText
+        foreach ($basicFunnels->getItems() as $funnel) {
+            if ($funnelName === $funnel['name']) {
+                return $funnel['id'];
+            }
+            unset($funnel);
+        }
+
+        unset($basicFunnels);
+
+        return null;
     }
 
     /**
@@ -50,5 +80,15 @@ class FunnelRequest extends AbstractRequest
         );
 
         return $this->request();
+    }
+
+    /**
+     * @return FunnelRequest
+     */
+    public function clearAuth(): self
+    {
+        $this->clearCookie();
+
+        return $this;
     }
 }

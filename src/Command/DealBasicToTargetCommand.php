@@ -7,6 +7,7 @@ use AmoCrm\Exceptions\MissingParams;
 use AmoCrm\Request\AuthRequest;
 use AmoCrm\Request\DealRequest;
 use AmoCrm\Request\FunnelRequest;
+use AmoCrm\Service\DealManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -81,20 +82,28 @@ class DealBasicToTargetCommand extends AbstractCommands
         try {
             $this->authRequest->createClient('basicHost');
             $this->amoAuth('basicLogin', 'basicHash');
+
+            $this->funnelRequest->createClient('basicHost');
+            $funnelId = $this->getFunnelIdByFunnelName('iCTurbo');
+
             $this->dealRequest->createClient('basicHost');
-            $basicDeals = $this->amoDeals();
+            $icTurboDeals = $this->getDealsByFunnelId($funnelId);
 
-            dump($basicDeals);
+            $this->clearAuth();
+
+            $this->authRequest->createClient('targetHost');
+            $this->amoAuth('targetLogin', 'targetHash');
+            $this->funnelRequest->createClient('targetHost');
+            $funnelId = $this->getFunnelIdByFunnelName('Воронка 1.1');
+
+            $this->dealRequest->createClient('targetHost');
+            $funnel1Deals = $this->getDealsByFunnelId($funnelId);
+
+            $dealsToFunnel1 = DealManager::getDealsToTarget($icTurboDeals, $funnel1Deals);
+
+            dump($dealsToFunnel1);
             exit;
 
-            $this->authRequest->clearAuth();
-
-//            $this->authRequest->createClient('targetHost');
-//            $this->amoAuth('targetLogin', 'targetHash');
-//            $this->funnelRequest->createClient('targetHost');
-//            $targetFunnel = $this->amoFunnel();
-
-            exit;
             $this->logger->info('Создание отчета успешно завершено. Всего файлов: %s');
         } catch (MissingParams $exc) {
             echo $exc->getMessage();
@@ -109,19 +118,24 @@ class DealBasicToTargetCommand extends AbstractCommands
      */
     private function amoAuth($login = null, $hash = null)
     {
-        $jsonResponse =
-            $this->authRequest
-                ->auth($login, $hash)
-                ->getBody()
-                ->getContents();
-
         $objectResponse = new \AmoCrm\Response\AuthResponse(
-            \GuzzleHttp\json_decode($jsonResponse, true, JSON_UNESCAPED_UNICODE)
+            \GuzzleHttp\json_decode(
+                $this->authRequest
+                    ->auth($login, $hash)
+                    ->getBody()
+                    ->getContents(),
+                true,
+                JSON_UNESCAPED_UNICODE
+            )
         );
 
         if ($objectResponse->getError()) {
             throw new AuthError($objectResponse->getError());
         }
+
+        $this->funnelRequest->setCookie(
+            $this->authRequest->getCookie()
+        );
 
         $this->dealRequest->setCookie(
             $this->authRequest->getCookie()
@@ -129,43 +143,38 @@ class DealBasicToTargetCommand extends AbstractCommands
     }
 
     /**
-     * @return array|mixed
+     * @param array $targetDeals
+     * @return array
      */
-    private function amoDeals()
+    private function addNewTargetDeal(array $targetDeals = []): array
     {
-        $jsonResponse =
-            $this->dealRequest
-                ->getDeals();
-
-        return new \AmoCrm\Response\DealResponse(
-            \GuzzleHttp\json_decode($jsonResponse, true)
-        );
+        return $this->dealRequest->addDeal($targetDeals)->getBody()->getContents();
     }
 
     /**
-     * @return array|mixed
+     * @param null|int $funnelId
+     *
+     * @return array
      */
-    private function amoFunnel(): ?int
+    private function getDealsByFunnelId(int $funnelId = null): array
     {
-        $jsonResponse =
-            $this->funnelRequest
-                ->getFunnel()
-                ->getBody()
-                ->getContents();
+        return $this->dealRequest->getDealsByFunnelId($funnelId);
+    }
 
-        $basicFunnels = new \AmoCrm\Response\DealResponse(
-            \GuzzleHttp\json_decode($jsonResponse, true)
-        );
+    /**
+     * @param null|string $funnelName
+     *
+     * @return null|int
+     */
+    private function getFunnelIdByFunnelName(string $funnelName = null): ?int
+    {
+        return $this->funnelRequest->getFunnelIdByFunnelName($this->funnelRequest->getFunnel(), $funnelName);
+    }
 
-        foreach ($basicFunnels->getItems() as $funnel) {
-            if ('iCTurbo' === $funnel['name']) {
-                return $funnel['id'];
-            }
-            unset($funnel);
-        }
-
-        unset($jsonResponse, $basicFunnels);
-
-        return null;
+    private function clearAuth(): void
+    {
+        $this->authRequest->clearAuth();
+        $this->dealRequest->clearAuth();
+        $this->funnelRequest->clearAuth();
     }
 }

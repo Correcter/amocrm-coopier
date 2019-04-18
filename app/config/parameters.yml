@@ -17,6 +17,6 @@ parameters:
     auth.post: /private/api/auth.php
     deal.get: /api/v2/leads
     funnel.get: /api/v2/pipelines
-    funnel.post: /private/api/v2/json/pipelines/set
+    deal.add: /api/v2/leads
     funnel.delete: /private/api/v2/json/pipelines/delete
     kernel.secret: 1cff313fe2c7ea760869c89ead447314

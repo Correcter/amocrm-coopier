@@ -23,46 +23,88 @@ class DealRequest extends AbstractRequest
     }
 
     /**
-     * @return Response
+     * @param null|int $funnelId
+     *
+     * @return array
      */
-    public function getDeals(int $pipelineId = null): Response
+    public function getDealsByFunnelId(int $funnelId = null): array
     {
         $this->setRequstUri(
             $this->parameterBag->get('dealGet')
         );
-        $this->setQueryParams([
-            'limit_rows' => 100,
-            'with' => 'name',
-        ]);
-        $this->setHttpMethod('GET');
 
-        $requestBody = $this->request()->getBody();
+        $limit = 100;
+        $offset = 0;
+        $actualDeals = [];
 
-        while (!$requestBody->eof()) {
-            // Read a line from the stream
-            $line = $requestBody->read(1024);
-            // JSON decode the line of data
-            $data = json_decode($line, true);
-            dump($data);
-            exit;
-        }
+        do {
+            $hasNeedle = false;
+            $this->setQueryParams([
+                'limit_rows' => $limit,
+                'limit_offset' => ($offset * $limit),
+            ]);
+            $this->setHttpMethod('GET');
+
+            $requestBody = $this->request()->getBody();
+
+            //dump($limit, ($offset * $limit), $requestBody->getSize());
+
+            while ($line = $requestBody->read(1000)) {
+                if (false !== strpos($line, '"pipeline_id":'.$funnelId)) {
+                    $hasNeedle = true;
+
+                    break;
+                }
+            }
+
+            if ($hasNeedle) {
+                $dealsFilter =
+                    new \AmoCrm\Response\DealResponse(
+                        \GuzzleHttp\json_decode(
+                            $this->request()->getBody()->getContents(),
+                            true,
+                            JSON_UNESCAPED_UNICODE
+                        )
+                    );
+                foreach ($dealsFilter->getItems() as $deal) {
+                    if ($deal['pipeline_id'] === $funnelId) {
+                        $actualDeals[$deal['id']] = $deal;
+                    }
+                }
+            }
+
+            ++$offset;
+        } while ($requestBody->getSize());
+
+        return $actualDeals;
     }
 
     /**
      * @param array $params
-     * @param null  $method
      *
      * @return Response
      */
-    public function addDeal(array $params = [], $method = null)
+    public function addDeal(array $params = []): Response
     {
-        $this->setRequstUri('/private/api/v2/json/pipelines/set');
-        $this->setHttpMethod($method);
+        $this->setRequstUri(
+            $this->parameterBag->get('dealAdd')
+        );
+        $this->setHttpMethod('POST');
         $this->addHeader('Content-Type', 'application/json; charset=utf-8');
         $this->setBody(
             \GuzzleHttp\json_encode($params, JSON_UNESCAPED_UNICODE)
         );
 
         return $this->request();
+    }
+
+    /**
+     * @return DealRequest
+     */
+    public function clearAuth(): self
+    {
+        $this->clearCookie();
+
+        return $this;
     }
 }

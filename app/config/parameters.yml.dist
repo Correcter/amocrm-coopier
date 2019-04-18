@@ -16,6 +16,6 @@ parameters:
     host.target: https://new5832c10517fd6.amocrm.ru
     auth.post: /private/api/auth.php
     deal.get: /api/v2/leads
+    deal.add: /api/v2/leads
     funnel.get: /api/v2/pipelines
-    funnel.post: /private/api/v2/json/pipelines/set
     funnel.delete: /private/api/v2/json/pipelines/delete

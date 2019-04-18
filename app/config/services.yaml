@@ -20,8 +20,8 @@ services:
                 targetPass: "%target.pass%"
                 targetHash: "%target.hash%"
                 dealGet: "%deal.get%"
+                dealAdd: "%deal.add%"
                 funnelGet: "%funnel.get%"
-                funnelPost: "%funnel.post%"
                 funnelDelete: "%funnel.delete%"
                 authPost: "%auth.post%"
 
