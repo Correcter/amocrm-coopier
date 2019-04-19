@@ -24,10 +24,11 @@ class DealRequest extends AbstractRequest
 
     /**
      * @param null|int $funnelId
+     * @param null|int $statusId
      *
      * @return array
      */
-    public function getDealsByFunnelId(int $funnelId = null): array
+    public function getDealsByFunnelId(int $funnelId = null, int $statusId = null): array
     {
         $this->setRequstUri(
             $this->parameterBag->get('dealGet')
@@ -66,9 +67,18 @@ class DealRequest extends AbstractRequest
                             JSON_UNESCAPED_UNICODE
                         )
                     );
-                foreach ($dealsFilter->getItems() as $deal) {
-                    if ($deal['pipeline_id'] === $funnelId) {
-                        $actualDeals[$deal['id']] = $deal;
+
+                if (null === $statusId) {
+                    foreach ($dealsFilter->getItems() as $deal) {
+                        if ($deal['pipeline_id'] === $funnelId) {
+                            $actualDeals[$deal['id']] = $deal;
+                        }
+                    }
+                } else {
+                    foreach ($dealsFilter->getItems() as $deal) {
+                        if ($deal['pipeline_id'] === $funnelId && $deal['status_id'] === $statusId) {
+                            $actualDeals[$deal['id']] = $deal['name'];
+                        }
                     }
                 }
             }
@@ -85,6 +95,26 @@ class DealRequest extends AbstractRequest
      * @return Response
      */
     public function addDeal(array $params = []): Response
+    {
+        $this->dealPostRequest($params);
+    }
+
+    /**
+     * @param array $dealsToUpdate
+     *
+     * @return Response
+     */
+    public function updateDealsStatuses(array $dealsToUpdate = []): Response
+    {
+        return $this->dealPostRequest($dealsToUpdate);
+    }
+
+    /**
+     * @param array $params
+     *
+     * @return Response
+     */
+    private function dealPostRequest(array $params = []): Response
     {
         $this->setRequstUri(
             $this->parameterBag->get('dealAdd')

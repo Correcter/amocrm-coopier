@@ -3,7 +3,6 @@
 namespace AmoCrm\Command;
 
 use AmoCrm\Exceptions\AuthError;
-use AmoCrm\Exceptions\MissingParams;
 use AmoCrm\Request\AuthRequest;
 use AmoCrm\Request\DealRequest;
 use AmoCrm\Request\FunnelRequest;
@@ -96,7 +95,7 @@ class FunnelBasicToTargetCommand extends AbstractCommands
 
             exit;
             $this->logger->info('Создание отчета успешно завершено. Всего файлов: %s');
-        } catch (MissingParams $exc) {
+        } catch (\RuntimeException $exc) {
             echo $exc->getMessage();
         }
     }

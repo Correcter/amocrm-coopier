@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @author Vitaly Dergunov (<v.dergunov@icontext.ru>)
  */
-class DealBasicToTargetCommand extends AbstractCommands
+class UpdateBasicDealStatusFromTargetCommand extends AbstractCommands
 {
     /**
      * @var AuthRequest
@@ -60,12 +60,12 @@ class DealBasicToTargetCommand extends AbstractCommands
     public function configure()
     {
         $this
-            ->setName('basic-to-target:deal')
+            ->setName('target-to-basic:updateStatus')
             ->addOption(
                 'force',
                 'f',
                 InputOption::VALUE_OPTIONAL,
-                'Выполнить копирование сделки в целевую воронку',
+                'Обновить статус базовой сделки из целевой',
                 null
             )
             ->setDescription('Загрузить сделки');
@@ -80,47 +80,41 @@ class DealBasicToTargetCommand extends AbstractCommands
     public function execute(InputInterface $input, OutputInterface $output)
     {
         try {
-            $this->authRequest->createClient('basicHost');
-            $this->amoAuth('basicLogin', 'basicHash');
-
-            $this->funnelRequest->createClient('basicHost');
-            $funnelId = $this->getFunnelIdByFunnelName('iCTurbo');
-
-            $this->dealRequest->createClient('basicHost');
-            $icTurboDeals = $this->getDealsByFunnelId($funnelId);
-
-            $this->clearAuth();
-
             $this->authRequest->createClient('targetHost');
             $this->amoAuth('targetLogin', 'targetHash');
             $this->funnelRequest->createClient('targetHost');
-            $funnelId = $this->getFunnelIdByFunnelName('Воронка 1.1');
-
             $this->dealRequest->createClient('targetHost');
-            $funnel1Deals = $this->getDealsByFunnelId($funnelId);
+            $funnelId = $this->getFunnelIdByFunnelName('Воронка 1.1');
+            $targetRunningDealNames = $this->findRunningDeals($funnelId, 142);
 
-            $dealsToFunnel1 =
-                DealManager::getDealsToTarget(
+            $this->clearAuth();
+
+            $this->authRequest->createClient('basicHost');
+            $this->amoAuth('basicLogin', 'basicHash');
+            $this->funnelRequest->createClient('basicHost');
+            $this->dealRequest->createClient('basicHost');
+            $funnelId = $this->getFunnelIdByFunnelName('iCTurbo');
+            $icTurboDeals = $this->getDealsByFunnelId($funnelId);
+
+            $dealsToUpdate =
+                DealManager::updateBasicFromTargetArray(
                     [
                         'status_id' => 142,
-                        'pipeline_id' => $funnelId,
                     ],
                     $icTurboDeals,
-                    $funnel1Deals
+                    $targetRunningDealNames
                 );
 
-            if (!$dealsToFunnel1) {
-                $mess = 'Количество сделок в Воронка 1.1 актуально. Действие не требуется.';
+            if (!$dealsToUpdate) {
+                $mess = 'Отсутствуют сделки с завершенным статусом. Действие не требуется';
                 $output->writeln($mess);
                 $this->logger->info($mess);
                 exit;
             }
 
-            if (!$this->addNewTargetDeal($dealsToFunnel1)->getItems()) {
-                throw new \RuntimeException('Во время добавления сделки произошла ошибка');
-            }
+            $updatedDeals = $this->updateDealsStatuses($dealsToUpdate)->getItems();
 
-            $mess = sprintf('Добавлено сделок: %1$s', count($dealsToFunnel1));
+            $mess = sprintf('Обновлено сделок: %1$s', count($updatedDeals));
             $output->writeln($mess);
             $this->logger->info($mess);
         } catch (\RuntimeException $exc) {
@@ -161,27 +155,6 @@ class DealBasicToTargetCommand extends AbstractCommands
     }
 
     /**
-     * @param array $targetDeals
-     *
-     * @return DealResponse
-     */
-    private function addNewTargetDeal(array $targetDeals = []): DealResponse
-    {
-        return
-            new DealResponse(
-                    \GuzzleHttp\json_decode(
-                        $this
-                            ->dealRequest
-                            ->addDeal($targetDeals)
-                            ->getBody()
-                            ->getContents(),
-                        true,
-                        JSON_UNESCAPED_UNICODE
-                    )
-            );
-    }
-
-    /**
      * @param null|int $funnelId
      *
      * @return array
@@ -199,6 +172,38 @@ class DealBasicToTargetCommand extends AbstractCommands
     private function getFunnelIdByFunnelName(string $funnelName = null): ?int
     {
         return $this->funnelRequest->getFunnelIdByFunnelName($this->funnelRequest->getFunnel(), $funnelName);
+    }
+
+    /**
+     * @param array $dealsToUpdate
+     *
+     * @return DealResponse
+     */
+    private function updateDealsStatuses(array $dealsToUpdate = []): DealResponse
+    {
+        return
+            new DealResponse(
+                \GuzzleHttp\json_decode(
+                    $this
+                        ->dealRequest
+                        ->updateDealsStatuses($dealsToUpdate)
+                        ->getBody()
+                        ->getContents(),
+                    true,
+                    JSON_UNESCAPED_UNICODE
+                )
+            );
+    }
+
+    /**
+     * @param null|int $funnelId
+     * @param null|int $statusId
+     *
+     * @return null|int
+     */
+    private function findRunningDeals(int $funnelId = null, int $statusId = null): array
+    {
+        return $this->dealRequest->getDealsByFunnelId($funnelId, $statusId);
     }
 
     private function clearAuth(): void
