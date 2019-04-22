@@ -84,7 +84,7 @@ class UpdateBasicDealStatusFromTargetCommand extends AbstractCommands
             $this->amoAuth('targetLogin', 'targetHash');
             $this->funnelRequest->createClient('targetHost');
             $this->dealRequest->createClient('targetHost');
-            $funnelId = $this->getFunnelIdByFunnelName('Воронка 1.1');
+            $funnelId = $this->getFunnelIdByFunnelName('Sociorama');
             $targetRunningDealNames = $this->findRunningDeals($funnelId, 142);
 
             $this->clearAuth();

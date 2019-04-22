@@ -2,6 +2,9 @@
 
 namespace AmoCrm\Service;
 
+use AmoCrm\Entity\Deal;
+use Doctrine\ORM\EntityManager;
+
 /**
  * Class DealManager.
  *
@@ -9,6 +12,70 @@ namespace AmoCrm\Service;
  */
 class DealManager
 {
+    /**
+     * @var EntityManager
+     */
+    private $entityManager;
+
+    /**
+     * DealManager constructor.
+     *
+     * @param EntityManager $entityManager
+     */
+    public function __construct(EntityManager $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
+
+    /**
+     * @param array    $deals
+     * @param null|int $pipeLineId
+     */
+    public function writeDealsIfNotExists(array $deals = [], int $pipeLineId = null)
+    {
+        $dealsByPipeLine =
+            $this->entityManager
+                ->getRepository(\AmoCrm\Entity\Deal::class)
+                ->getDealsByPipeline($pipeLineId);
+
+        dump($dealsByPipeLine);
+        exit;
+
+        $pipeLineModel =
+            $this->entityManager
+                ->getRepository(\AmoCrm\Entity\PipLine::class)
+                ->find($pipeLineId);
+
+        foreach ($deals as $deal) {
+            $dealModel = new Deal();
+            $dealModel->setId($deal['id']);
+            $dealModel->setName($deal['name']);
+            $dealModel->setResponsibleUserId($deal['responsible_user_id']);
+            $dealModel->setCreatedBy($deal['created_by']);
+            $dealModel->setCreatedAt($deal['created_at']);
+            $dealModel->setUpdatedAt($deal['updated_at']);
+            $dealModel->setAccountId($deal['account_id']);
+            $dealModel->setPipelineId($deal['pipeline_id']);
+            $dealModel->setStatusId($deal['status_id']);
+            $dealModel->setisDeleted($deal['is_deleted']);
+            $dealModel->setMainContact(\GuzzleHttp\json_encode($deal['main_contact']));
+            $dealModel->setGroupId($deal['group_id']);
+            $dealModel->setCompany(\GuzzleHttp\json_encode($deal['company']));
+            $dealModel->setClosedAt($deal['closed_at']);
+            $dealModel->setClosestTaskAt($deal['closest_task_at']);
+            $dealModel->setTags(\GuzzleHttp\json_encode($deal['tags']));
+            $dealModel->setCustomFields(\GuzzleHttp\json_encode($deal['custom_fields']));
+            $dealModel->setContacts(\GuzzleHttp\json_encode($deal['contacts']));
+            $dealModel->setSale($deal['contacts']);
+            $dealModel->setLossReasonId($deal['loss_reason_id']);
+            $dealModel->setPipelineText($deal['pipeline']);
+            $dealModel->setPipeline($pipeLineModel);
+            $dealModel->setLinks($deal['_links']);
+            $this->entityManager->persist($dealModel);
+        }
+        $this->entityManager->flush();
+    }
+
     /**
      * @param array $newParams
      * @param array $basicData

@@ -19,6 +19,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class DealBasicToTargetCommand extends AbstractCommands
 {
     /**
+     * @var DealManager
+     */
+    private $dealManager;
+
+    /**
      * @var AuthRequest
      */
     private $authRequest;
@@ -34,14 +39,15 @@ class DealBasicToTargetCommand extends AbstractCommands
     private $funnelRequest;
 
     /**
-     * SynсhTargetCommand constructor.
-     *
-     * @param AuthRequest     $authRequest
-     * @param DealRequest     $dealRequest
-     * @param FunnelRequest   $funnelRequest
+     * DealBasicToTargetCommand constructor.
+     * @param DealManager $dealManager
+     * @param AuthRequest $authRequest
+     * @param DealRequest $dealRequest
+     * @param FunnelRequest $funnelRequest
      * @param LoggerInterface $logger
      */
     public function __construct(
+        DealManager $dealManager,
         AuthRequest $authRequest,
         DealRequest $dealRequest,
         FunnelRequest $funnelRequest,
@@ -49,6 +55,7 @@ class DealBasicToTargetCommand extends AbstractCommands
     ) {
         parent::__construct($logger);
 
+        $this->dealManagert = $dealManager;
         $this->authRequest = $authRequest;
         $this->dealRequest = $dealRequest;
         $this->funnelRequest = $funnelRequest;
@@ -80,21 +87,27 @@ class DealBasicToTargetCommand extends AbstractCommands
     public function execute(InputInterface $input, OutputInterface $output)
     {
         try {
+
             $this->authRequest->createClient('basicHost');
             $this->amoAuth('basicLogin', 'basicHash');
 
             $this->funnelRequest->createClient('basicHost');
-            $funnelId = $this->getFunnelIdByFunnelName('iCTurbo');
+            $funnelId = $this->getFunnelIdByFunnelName('Sociorama');
 
             $this->dealRequest->createClient('basicHost');
-            $icTurboDeals = $this->getDealsByFunnelId($funnelId);
+            $socioramaDeals = $this->getDealsByFunnelId($funnelId);
+
+            $this->dealManager->writeDealsIfNotExists($socioramaDeals, $funnelId);
+
+            dump($socioramaDeals);
+            exit;
 
             $this->clearAuth();
 
             $this->authRequest->createClient('targetHost');
             $this->amoAuth('targetLogin', 'targetHash');
             $this->funnelRequest->createClient('targetHost');
-            $funnelId = $this->getFunnelIdByFunnelName('Воронка 1.1');
+            $funnelId = $this->getFunnelIdByFunnelName('Воронка');
 
             $this->dealRequest->createClient('targetHost');
             $funnel1Deals = $this->getDealsByFunnelId($funnelId);

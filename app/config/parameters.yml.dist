@@ -3,9 +3,9 @@ parameters:
     kernel.secret: 1cff313fe2c7ea760869c89ead447314
     database_host:     icontextdev.ru
     database_port:     3306
-    database_name:     yandex_handbook
-    database_user:     yandex_handbook
-    database_password: qsefwesds
+    database_name:     amocrm
+    database_user:     amocrm
+    database_password: jKjgIUGgvchAX
     basic.login: anya@icontext.ru
     basic.pass: "!O3xJ*De7S2O"
     basic.hash: c9d172b0fee534eb6ba2899f9f05b8470c26ca6b

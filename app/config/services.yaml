@@ -40,8 +40,13 @@ services:
         arguments:
           - "@amo.params"
 
+    AmoCrm\Service\DealManager:
+        arguments:
+          - "@doctrine.orm.entity_manager"
+
     AmoCrm\Command\:
         arguments:
+            - "@AmoCrm\\Service\\DealManager"
             - "@AmoCrm\\Request\\AuthRequest"
             - "@AmoCrm\\Request\\DealRequest"
             - "@AmoCrm\\Request\\FunnelRequest"
