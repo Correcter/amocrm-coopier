@@ -96,7 +96,7 @@ class DealRequest extends AbstractRequest
      */
     public function addDeal(array $params = []): Response
     {
-        $this->dealPostRequest($params);
+        return $this->dealPostRequest($params);
     }
 
     /**
@@ -107,6 +107,16 @@ class DealRequest extends AbstractRequest
     public function updateDealsStatuses(array $dealsToUpdate = []): Response
     {
         return $this->dealPostRequest($dealsToUpdate);
+    }
+
+    /**
+     * @return DealRequest
+     */
+    public function clearAuth(): self
+    {
+        $this->clearCookie();
+
+        return $this;
     }
 
     /**
@@ -126,15 +136,5 @@ class DealRequest extends AbstractRequest
         );
 
         return $this->request();
-    }
-
-    /**
-     * @return DealRequest
-     */
-    public function clearAuth(): self
-    {
-        $this->clearCookie();
-
-        return $this;
     }
 }

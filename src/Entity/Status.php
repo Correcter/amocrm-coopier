@@ -15,7 +15,7 @@ use Doctrine\ORM\Mapping as ORM;
 class Status
 {
     /**
-     * @ORM\ManyToMany(targetEntity="AmoCrm\Entity\PipLine", mappedBy="statuses" , cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity="AmoCrm\Entity\PipeLine", mappedBy="statuses" , cascade={"persist"})
      */
     private $piplines;
 
@@ -81,10 +81,10 @@ class Status
     }
 
     /**
-     * @param PipLine $pipline
+     * @param PipeLine $pipline
      * @return Status
      */
-    public function addPipLine(PipLine $pipline): self
+    public function addPipLine(PipeLine $pipline): self
     {
         $pipline->addStatus($this);
 
@@ -104,10 +104,10 @@ class Status
     }
 
     /**
-     * @param PipLine $pipLine
+     * @param PipeLine $pipLine
      * @return Status
      */
-    public function removeCompany(PipLine $pipLine): self
+    public function removeCompany(PipeLine $pipLine): self
     {
         if ($this->piplines->contains($pipLine)) {
             $this->piplines->removeElement($pipLine);

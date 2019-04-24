@@ -3,11 +3,16 @@
 namespace AmoCrm\Command;
 
 use AmoCrm\Exceptions\AuthError;
+use AmoCrm\Exceptions\InvalidRequest;
 use AmoCrm\Request\AuthRequest;
+use AmoCrm\Request\ContactRequest;
 use AmoCrm\Request\DealRequest;
 use AmoCrm\Request\FunnelRequest;
+use AmoCrm\Request\TaskRequest;
 use AmoCrm\Response\DealResponse;
+use AmoCrm\Response\TaskResponse;
 use AmoCrm\Service\DealManager;
+use AmoCrm\Service\TaskManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -39,11 +44,24 @@ class DealBasicToTargetCommand extends AbstractCommands
     private $funnelRequest;
 
     /**
+     * @var TaskRequest
+     */
+    private $taskRequest;
+
+    /**
+     * @var ContactRequest
+     */
+    private $contactRequest;
+
+    /**
      * DealBasicToTargetCommand constructor.
-     * @param DealManager $dealManager
-     * @param AuthRequest $authRequest
-     * @param DealRequest $dealRequest
-     * @param FunnelRequest $funnelRequest
+     *
+     * @param DealManager     $dealManager
+     * @param AuthRequest     $authRequest
+     * @param DealRequest     $dealRequest
+     * @param FunnelRequest   $funnelRequest
+     * @param TaskRequest     $taskRequest
+     * @param ContactRequest  $contactRequest
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -51,14 +69,18 @@ class DealBasicToTargetCommand extends AbstractCommands
         AuthRequest $authRequest,
         DealRequest $dealRequest,
         FunnelRequest $funnelRequest,
+        TaskRequest $taskRequest,
+        ContactRequest $contactRequest,
         LoggerInterface $logger
     ) {
         parent::__construct($logger);
 
-        $this->dealManagert = $dealManager;
+        $this->dealManager = $dealManager;
         $this->authRequest = $authRequest;
         $this->dealRequest = $dealRequest;
         $this->funnelRequest = $funnelRequest;
+        $this->taskRequest = $taskRequest;
+        $this->contactRequest = $contactRequest;
     }
 
     /**
@@ -87,7 +109,6 @@ class DealBasicToTargetCommand extends AbstractCommands
     public function execute(InputInterface $input, OutputInterface $output)
     {
         try {
-
             $this->authRequest->createClient('basicHost');
             $this->amoAuth('basicLogin', 'basicHash');
 
@@ -97,12 +118,19 @@ class DealBasicToTargetCommand extends AbstractCommands
             $this->dealRequest->createClient('basicHost');
             $socioramaDeals = $this->getDealsByFunnelId($funnelId);
 
-            $this->dealManager->writeDealsIfNotExists($socioramaDeals, $funnelId);
+            $this->taskRequest->createClient('basicHost');
+            $dealOldTasks = $this->getTasksOfDeals($socioramaDeals);
 
-            dump($socioramaDeals);
-            exit;
+//            dump($socioramaDeals, $dealOldTasks);
+//            exit;
+
+//            $dealContacts = $this->getContactsOfDeals($socioramaDeals);
 
             $this->clearAuth();
+
+//            if($this->dealManager->writeDealsIfNotExists($socioramaDeals, $funnelId)) {
+//
+//            }
 
             $this->authRequest->createClient('targetHost');
             $this->amoAuth('targetLogin', 'targetHash');
@@ -110,34 +138,45 @@ class DealBasicToTargetCommand extends AbstractCommands
             $funnelId = $this->getFunnelIdByFunnelName('Воронка');
 
             $this->dealRequest->createClient('targetHost');
-            $funnel1Deals = $this->getDealsByFunnelId($funnelId);
+            $targetFunnelDeals = $this->getDealsByFunnelId($funnelId);
 
-            $dealsToFunnel1 =
+            $dealsToTargetFunnel =
                 DealManager::getDealsToTarget(
                     [
-                        'status_id' => 142,
                         'pipeline_id' => $funnelId,
                     ],
-                    $icTurboDeals,
-                    $funnel1Deals
+                    $socioramaDeals,
+                    $targetFunnelDeals
                 );
 
-            if (!$dealsToFunnel1) {
-                $mess = 'Количество сделок в Воронка 1.1 актуально. Действие не требуется.';
-                $output->writeln($mess);
+            if (!$dealsToTargetFunnel) {
+                $mess = 'Количество сделок в "Воронка" актуально. Действие не требуется.';
+                $output->writeln("<info>${mess}</info>");
                 $this->logger->info($mess);
                 exit;
             }
 
-            if (!$this->addNewTargetDeal($dealsToFunnel1)->getItems()) {
+            $newDeals = $this->addNewTargetDeal($dealsToTargetFunnel)->getItems();
+
+            $tasksToTarget =
+                TaskManager::buildTasksToTarget(
+                    $newDeals,
+                    $dealOldTasks
+                );
+
+            $this->addNewTask($tasksToTarget);
+
+            if (!$newDeals) {
                 throw new \RuntimeException('Во время добавления сделки произошла ошибка');
             }
 
-            $mess = sprintf('Добавлено сделок: %1$s', count($dealsToFunnel1));
+            $mess = sprintf('Добавлено сделок: %1$s', count($dealsToTargetFunnel));
             $output->writeln($mess);
             $this->logger->info($mess);
         } catch (\RuntimeException $exc) {
             echo $exc->getMessage();
+        } catch (InvalidRequest $exc) {
+            $output->writeln($exc->getMessage());
         }
     }
 
@@ -171,6 +210,31 @@ class DealBasicToTargetCommand extends AbstractCommands
         $this->dealRequest->setCookie(
             $this->authRequest->getCookie()
         );
+
+        $this->taskRequest->setCookie(
+            $this->authRequest->getCookie()
+        );
+    }
+
+    /**
+     * @param array $dealsData
+     *
+     * @return TaskResponse
+     */
+    private function addNewTask(array $dealsData = [])
+    {
+        return
+            new TaskResponse(
+                \GuzzleHttp\json_decode(
+                    $this
+                        ->taskRequest
+                        ->addTask($dealsData)
+                        ->getBody()
+                        ->getContents(),
+                    true,
+                    JSON_UNESCAPED_UNICODE
+                )
+            );
     }
 
     /**
@@ -192,6 +256,26 @@ class DealBasicToTargetCommand extends AbstractCommands
                         JSON_UNESCAPED_UNICODE
                     )
             );
+    }
+
+    /**
+     * @param array $deals
+     *
+     * @return array
+     */
+    private function getContactsOfDeals(array $deals = []): array
+    {
+        return $this->contactRequest->getContactsOfDeals($deals);
+    }
+
+    /**
+     * @param array $deals
+     *
+     * @return array
+     */
+    private function getTasksOfDeals(array $deals = []): array
+    {
+        return $this->taskRequest->getTasksOfDeals($deals);
     }
 
     /**

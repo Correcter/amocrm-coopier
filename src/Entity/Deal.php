@@ -14,7 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
 class Deal
 {
     /**
-     * @ORM\ManyToOne(targetEntity="AmoCrm\Entity\PipLine", inversedBy="deals", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="AmoCrm\Entity\PipeLine", inversedBy="deals", cascade={"persist"})
      * @ORM\JoinColumn(name="pipeline_id", referencedColumnName="id")
      */
     private $pipeline;
@@ -91,7 +91,7 @@ class Deal
     private $isDeleted;
 
     /**
-     * @var int
+     * @var string
      *
      * @ORM\Column(name="main_contact", type="string")
      */
@@ -384,21 +384,21 @@ class Deal
     }
 
     /**
-     * @return int
+     * @return null|array
      */
-    public function getMainContact(): ?int
+    public function getMainContact(): array
     {
-        return $this->mainContact;
+        return \GuzzleHttp\json_decode($this->mainContact);
     }
 
     /**
-     * @param null|int $mainContact
+     * @param array $mainContact
      *
      * @return Deal
      */
-    public function setMainContact(int $mainContact = null): self
+    public function setMainContact(array $mainContact = []): self
     {
-        $this->mainContact = $mainContact;
+        $this->mainContact = \GuzzleHttp\json_encode($mainContact);
 
         return $this;
     }
@@ -424,21 +424,21 @@ class Deal
     }
 
     /**
-     * @return null|string
+     * @return array
      */
-    public function getCompany(): ?string
+    public function getCompany(): array
     {
-        return $this->company;
+        return \GuzzleHttp\json_decode($this->company);
     }
 
     /**
-     * @param null|string $company
+     * @param array $company
      *
      * @return Deal
      */
-    public function setCompany(string $company = null): self
+    public function setCompany(array $company = []): self
     {
-        $this->company = $company;
+        $this->company = \GuzzleHttp\json_encode($company);
 
         return $this;
     }
@@ -484,61 +484,61 @@ class Deal
     }
 
     /**
-     * @return null|string
+     * @return array
      */
-    public function getTags(): ?string
+    public function getTags(): array
     {
-        return $this->tags;
+        return \GuzzleHttp\json_decode($this->tags);
     }
 
     /**
-     * @param null|string $tags
+     * @param array $tags
      *
      * @return Deal
      */
-    public function setTags(string $tags = null): self
+    public function setTags(array $tags = []): self
     {
-        $this->tags = $tags;
+        $this->tags = \GuzzleHttp\json_encode($tags);
 
         return $this;
     }
 
     /**
-     * @return null|string
+     * @return array
      */
-    public function getCustomFields(): ?string
+    public function getCustomFields(): array
     {
-        return $this->customFields;
+        return \GuzzleHttp\json_decode($this->customFields);
     }
 
     /**
-     * @param null|string $customFields
+     * @param array $customFields
      *
      * @return Deal
      */
-    public function setCustomFields(string $customFields = null): self
+    public function setCustomFields(array $customFields = []): self
     {
-        $this->customFields = $customFields;
+        $this->customFields = \GuzzleHttp\json_encode($customFields);
 
         return $this;
     }
 
     /**
-     * @return null|string
+     * @return array
      */
-    public function getContacts(): ?string
+    public function getContacts(): array
     {
-        return $this->contacts;
+        return \GuzzleHttp\json_decode($this->contacts);
     }
 
     /**
-     * @param null|string $contacts
+     * @param null|array $contacts
      *
      * @return Deal
      */
-    public function setContacts(string $contacts = null): self
+    public function setContacts(array $contacts = null): self
     {
-        $this->contacts = $contacts;
+        $this->contacts = \GuzzleHttp\json_encode($contacts);
 
         return $this;
     }
@@ -584,39 +584,39 @@ class Deal
     }
 
     /**
-     * @return null|string
+     * @return array
      */
-    public function getPipelineText(): ?string
+    public function getPipelineText(): array
     {
-        return $this->pipelineText;
+        return \GuzzleHttp\json_decode($this->pipelineText);
     }
 
     /**
-     * @param null|string $pipelineText
+     * @param array $pipelineText
      *
      * @return Deal
      */
-    public function setPipelineText(string $pipelineText = null): self
+    public function setPipelineText(array $pipelineText = []): self
     {
-        $this->pipelineText = $pipelineText;
+        $this->pipelineText = \GuzzleHttp\json_encode($pipelineText);
 
         return $this;
     }
 
     /**
-     * @return null|PipLine
+     * @return null|PipeLine
      */
-    public function getPipeline(): ?PipLine
+    public function getPipeline(): ?PipeLine
     {
         return $this->pipeline;
     }
 
     /**
-     * @param null|PipLine $pipeline
+     * @param null|PipeLine $pipeline
      *
      * @return Deal
      */
-    public function setPipeline(PipLine $pipeline = null): self
+    public function setPipeline(PipeLine $pipeline = null): self
     {
         $this->pipeline = $pipeline;
 
@@ -626,19 +626,19 @@ class Deal
     /**
      * @return string
      */
-    public function getLinks(): ?string
+    public function getLinks(): array
     {
-        return $this->_links;
+        return \GuzzleHttp\json_decode($this->_links);
     }
 
     /**
-     * @param null|string $links
+     * @param array $links
      *
      * @return Deal
      */
-    public function setLinks(string $links = null): self
+    public function setLinks(array $links = []): self
     {
-        $this->_links = $links;
+        $this->_links = \GuzzleHttp\json_encode($links);
 
         return $this;
     }

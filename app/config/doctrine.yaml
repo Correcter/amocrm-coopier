@@ -1,0 +1,39 @@
+doctrine:
+    orm:
+        auto_generate_proxy_classes: "%kernel.debug%"
+        default_entity_manager: amocrm
+#        entity_managers:
+#            amocrm:
+#                query_cache_driver: array
+#                result_cache_driver: array
+#                connection: amocrm
+#                naming_strategy: doctrine.orm.naming_strategy.underscore
+
+        mappings:
+            AmoCrm\Entity:
+                type: annotation
+                dir: '%kernel.project_dir%/src/Entity'
+                is_bundle: false
+                prefix: AmoCrm\Entity
+                alias: AmoCrm
+#                auto_mapping: true
+#                mappings:
+#                    AmoCrm: ~
+
+    dbal:
+        default_connection: "amocrm"
+        connections:
+            amocrm:
+                driver:   "pdo_mysql"
+                host:     "%database_host%"
+                port:     "%database_port%"
+                dbname:   "%database_name%"
+                user:     "%database_user%"
+                password: "%database_password%"
+                server_version: 5.6
+                charset: utf8
+                options:
+#                    #Разрешаем загруку данных из файлов  LOAD DATA LOCAL INFILE
+#                    1001: true
+                mapping_types:
+                    enum: string

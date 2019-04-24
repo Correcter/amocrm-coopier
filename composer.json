@@ -41,7 +41,6 @@
         "call-scripts": [
             "AmoCrm\\Composer\\ScriptHandler::clearCache"
         ],
-        "clear-cache-cmd": "Composer\\ScriptHandler::clearCache",
         "post-install-cmd": [
             "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters",
             "@call-scripts"

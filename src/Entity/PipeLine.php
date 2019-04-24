@@ -7,12 +7,12 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * PipLine..
+ * PipeLine..
  *
- * @ORM\Entity(repositoryClass="AmoCrm\Repository\PipLineRepository")
- * @ORM\Table(name="am_piplines")
+ * @ORM\Entity(repositoryClass="AmoCrm\Repository\PipeLineRepository")
+ * @ORM\Table(name="am_pipelines")
  */
-class PipLine
+class PipeLine
 {
     /**
      * @ORM\OneToMany(targetEntity="AmoCrm\Entity\Deal", mappedBy="pipeline", cascade={"persist"})
@@ -65,7 +65,7 @@ class PipLine
     private $_links;
 
     /**
-     * PipLine constructor.
+     * PipeLine constructor.
      */
     public function __construct()
     {
@@ -93,7 +93,7 @@ class PipLine
     /**
      * @param Deal $deal
      *
-     * @return PipLine
+     * @return PipeLine
      */
     public function addDeal(Deal $deal): self
     {
@@ -117,7 +117,7 @@ class PipLine
     /**
      * @param Deal $deal
      *
-     * @return PipLine
+     * @return PipeLine
      */
     public function removeDeal(Deal $deal): self
     {
@@ -131,7 +131,7 @@ class PipLine
     /**
      * @param Status $status
      *
-     * @return PipLine
+     * @return PipeLine
      */
     public function addStatus(Status $status): self
     {
@@ -155,7 +155,7 @@ class PipLine
     /**
      * @param Status $status
      *
-     * @return PipLine
+     * @return PipeLine
      */
     public function removeCompany(Status $status): self
     {
@@ -177,7 +177,7 @@ class PipLine
     /**
      * @param null|string $name
      *
-     * @return PipLine
+     * @return PipeLine
      */
     public function setName(string $name = null): self
     {
@@ -197,7 +197,7 @@ class PipLine
     /**
      * @param null|string $sort
      *
-     * @return PipLine
+     * @return PipeLine
      */
     public function setSort(string $sort = null): self
     {
@@ -217,7 +217,7 @@ class PipLine
     /**
      * @param bool $isMain
      *
-     * @return PipLine
+     * @return PipeLine
      */
     public function setIsMain(bool $isMain = false): self
     {
@@ -227,21 +227,21 @@ class PipLine
     }
 
     /**
-     * @return string
+     * @return array
      */
-    public function getLinks(): ?string
+    public function getLinks(): array
     {
-        return $this->_links;
+        return \GuzzleHttp\json_decode($this->_links);
     }
 
     /**
-     * @param null|string $links
+     * @param array $links
      *
-     * @return PipLine
+     * @return PipeLine
      */
-    public function setLinks(string $links = null): self
+    public function setLinks(array $links = []): self
     {
-        $this->_links = $links;
+        $this->_links = \GuzzleHttp\json_encode($links);
 
         return $this;
     }

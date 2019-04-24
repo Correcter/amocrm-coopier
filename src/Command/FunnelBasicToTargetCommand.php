@@ -6,6 +6,9 @@ use AmoCrm\Exceptions\AuthError;
 use AmoCrm\Request\AuthRequest;
 use AmoCrm\Request\DealRequest;
 use AmoCrm\Request\FunnelRequest;
+use AmoCrm\Request\TaskRequest;
+use AmoCrm\Request\ContactRequest;
+use AmoCrm\Service\DealManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -16,6 +19,11 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class FunnelBasicToTargetCommand extends AbstractCommands
 {
+    /**
+     * @var DealManager
+     */
+    private $dealManager;
+
     /**
      * @var AuthRequest
      */
@@ -32,24 +40,43 @@ class FunnelBasicToTargetCommand extends AbstractCommands
     private $funnelRequest;
 
     /**
-     * SynсhTargetCommand constructor.
+     * @var TaskRequest
+     */
+    private $taskRequest;
+
+    /**
+     * @var ContactRequest
+     */
+    private $contactRequest;
+
+    /**
+     * DealBasicToTargetCommand constructor.
      *
+     * @param DealManager     $dealManager
      * @param AuthRequest     $authRequest
      * @param DealRequest     $dealRequest
      * @param FunnelRequest   $funnelRequest
+     * @param TaskRequest     $taskRequest
+     * @param ContactRequest  $contactRequest
      * @param LoggerInterface $logger
      */
     public function __construct(
+        DealManager $dealManager,
         AuthRequest $authRequest,
         DealRequest $dealRequest,
         FunnelRequest $funnelRequest,
+        TaskRequest $taskRequest,
+        ContactRequest $contactRequest,
         LoggerInterface $logger
     ) {
         parent::__construct($logger);
 
+        $this->dealManager = $dealManager;
         $this->authRequest = $authRequest;
         $this->dealRequest = $dealRequest;
         $this->funnelRequest = $funnelRequest;
+        $this->taskRequest = $taskRequest;
+        $this->contactRequest = $contactRequest;
     }
 
     /**

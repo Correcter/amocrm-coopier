@@ -3,9 +3,9 @@
 namespace AmoCrm\Repository;
 
 /**
- * Class PipLineRepository.
+ * Class PipeLineRepository.
  */
-class PipLineRepository extends \Doctrine\ORM\EntityRepository
+class PipeLineRepository extends \Doctrine\ORM\EntityRepository
 {
     /**
      * @return array

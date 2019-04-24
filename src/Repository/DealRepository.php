@@ -7,6 +7,17 @@ namespace AmoCrm\Repository;
  */
 class DealRepository extends \Doctrine\ORM\EntityRepository
 {
+    public function countDealsByIds(array $dealIds = [])
+    {
+        return
+            $this->createQueryBuilder('dl')
+                ->select('count(dl.id)')
+                ->where('dl.id IN (:dealIds)')
+                ->setParameter('dealIds', $dealIds)
+                ->getQuery()
+                ->getSingleScalarResult();
+    }
+
     /**
      * @param null|int $pipeLineId
      *
@@ -20,6 +31,6 @@ class DealRepository extends \Doctrine\ORM\EntityRepository
                 ->where('dl.pipelineId=:pipelineId')
                 ->setParameter('pipelineId', $pipeLineId)
                 ->getQuery()
-                ->getResult();
+                ->getArrayResult();
     }
 }

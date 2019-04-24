@@ -17,5 +17,9 @@ parameters:
     auth.post: /private/api/auth.php
     deal.get: /api/v2/leads
     deal.add: /api/v2/leads
+    task.add: /api/v2/tasks
+    task.get: /api/v2/tasks
+    contact.add: /api/v2/contacts
+    contact.get: /api/v2/contacts
     funnel.get: /api/v2/pipelines
     funnel.delete: /private/api/v2/json/pipelines/delete

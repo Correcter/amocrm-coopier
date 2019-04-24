@@ -1,11 +1,12 @@
 # This file is auto-generated during the composer install
 parameters:
     locale: ru
+    kernel.secret: 1cff313fe2c7ea760869c89ead447314
     database_host: icontextdev.ru
     database_port: 3306
-    database_name: yandex_handbook
-    database_user: yandex_handbook
-    database_password: qsefwesds
+    database_name: amocrm
+    database_user: amocrm
+    database_password: jKjgIUGgvchAX
     basic.login: anya@icontext.ru
     basic.pass: '!O3xJ*De7S2O'
     basic.hash: c9d172b0fee534eb6ba2899f9f05b8470c26ca6b
@@ -16,7 +17,10 @@ parameters:
     host.target: 'https://new5832c10517fd6.amocrm.ru'
     auth.post: /private/api/auth.php
     deal.get: /api/v2/leads
-    funnel.get: /api/v2/pipelines
     deal.add: /api/v2/leads
+    task.add: /api/v2/tasks
+    task.get: /api/v2/tasks
+    contact.add: /api/v2/contacts
+    contact.get: /api/v2/contacts
+    funnel.get: /api/v2/pipelines
     funnel.delete: /private/api/v2/json/pipelines/delete
-    kernel.secret: 1cff313fe2c7ea760869c89ead447314

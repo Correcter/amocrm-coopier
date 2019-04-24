@@ -30,20 +30,31 @@ class DealManager
     /**
      * @param array    $deals
      * @param null|int $pipeLineId
+     *
+     * @return null|bool
      */
-    public function writeDealsIfNotExists(array $deals = [], int $pipeLineId = null)
+    public function writeDealsIfNotExists(array $deals = [], int $pipeLineId = null): ?bool
     {
-        $dealsByPipeLine =
+        $dbDeals =
             $this->entityManager
                 ->getRepository(\AmoCrm\Entity\Deal::class)
                 ->getDealsByPipeline($pipeLineId);
 
-        dump($dealsByPipeLine);
-        exit;
+        $dbIds = [];
+        foreach ($dbDeals as $dbDeal) {
+            if (isset($deals[$dbDeal['id']])) {
+                unset($deals[$dbDeal['id']]);
+            }
+            unset($dbDeal);
+        }
 
-        $pipeLineModel =
+        if (0 === count($deals)) {
+            return null;
+        }
+
+        $pipeLine =
             $this->entityManager
-                ->getRepository(\AmoCrm\Entity\PipLine::class)
+                ->getRepository(\AmoCrm\Entity\PipeLine::class)
                 ->find($pipeLineId);
 
         foreach ($deals as $deal) {
@@ -58,22 +69,24 @@ class DealManager
             $dealModel->setPipelineId($deal['pipeline_id']);
             $dealModel->setStatusId($deal['status_id']);
             $dealModel->setisDeleted($deal['is_deleted']);
-            $dealModel->setMainContact(\GuzzleHttp\json_encode($deal['main_contact']));
+            $dealModel->setMainContact($deal['main_contact']);
             $dealModel->setGroupId($deal['group_id']);
-            $dealModel->setCompany(\GuzzleHttp\json_encode($deal['company']));
+            $dealModel->setCompany($deal['company']);
             $dealModel->setClosedAt($deal['closed_at']);
             $dealModel->setClosestTaskAt($deal['closest_task_at']);
-            $dealModel->setTags(\GuzzleHttp\json_encode($deal['tags']));
-            $dealModel->setCustomFields(\GuzzleHttp\json_encode($deal['custom_fields']));
-            $dealModel->setContacts(\GuzzleHttp\json_encode($deal['contacts']));
-            $dealModel->setSale($deal['contacts']);
+            $dealModel->setTags($deal['tags']);
+            $dealModel->setCustomFields($deal['custom_fields']);
+            $dealModel->setContacts($deal['contacts']);
+            $dealModel->setSale($deal['sale']);
             $dealModel->setLossReasonId($deal['loss_reason_id']);
             $dealModel->setPipelineText($deal['pipeline']);
-            $dealModel->setPipeline($pipeLineModel);
+            $dealModel->setPipeline($pipeLine);
             $dealModel->setLinks($deal['_links']);
             $this->entityManager->persist($dealModel);
         }
         $this->entityManager->flush();
+
+        return true;
     }
 
     /**
