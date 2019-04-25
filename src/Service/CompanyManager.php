@@ -2,15 +2,14 @@
 
 namespace AmoCrm\Service;
 
-//use AmoCrm\Entity\Task;
 use Doctrine\ORM\EntityManager;
 
 /**
- * Class TaskManager.
+ * Class CompanyManager.
  *
  * @author Vitaly Dergunov <correcter@inbox.ru>
  */
-class TaskManager
+class CompanyManager
 {
     /**
      * @var EntityManager
@@ -28,12 +27,11 @@ class TaskManager
     }
 
     /**
-     * @param array      $newDeals
-     * @param null|array $oldTasks
-     *
+     * @param array $newDeals
+     * @param array $oldCompanies
      * @return array
      */
-    public static function buildTasksToTarget(array $newDeals = [], array $oldTasks = null): array
+    public static function buildCompaniesToTarget(array $newDeals = [], array $oldCompanies = []): array
     {
         $toTargetTasks = [];
         foreach ($newDeals as $oldDealId => $newDeal) {

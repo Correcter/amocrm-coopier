@@ -2,6 +2,7 @@
 
 namespace AmoCrm\Request;
 
+use AmoCrm\Response\ContactResponse;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
@@ -33,8 +34,33 @@ class ContactRequest extends AbstractRequest
             $this->parameterBag->get('contactGet')
         );
 
+        $limit = 100;
+        $offset = 0;
+        $contactsOfDeals = [];
 
+        foreach ($deals as $deal) {
+            if (!isset($deal['contacts']['id'])) {
+                throw new \RuntimeException('Отсутствует идентификаторы у контактов');
+            }
 
+            $this->setQueryParams([
+                'id' => $deal['contacts']['id'],
+                'limit_rows' => $limit,
+                'limit_offset' => ($offset * $limit),
+            ]);
+            $this->setHttpMethod('GET');
+
+            $contactsOfDeals[$deal['id']] =
+                new ContactResponse(
+                    \GuzzleHttp\json_decode(
+                        $this->request()->getBody()->getContents(),
+                        true,
+                        JSON_UNESCAPED_UNICODE
+                    )
+                );
+        }
+
+        return $contactsOfDeals;
     }
 
     /**
@@ -42,9 +68,9 @@ class ContactRequest extends AbstractRequest
      *
      * @return Response
      */
-    public function addDeal(array $params = []): Response
+    public function addContact(array $params = []): Response
     {
-        return $this->dealPostRequest($params);
+        return $this->postRequest($params);
     }
 
     /**
@@ -52,9 +78,9 @@ class ContactRequest extends AbstractRequest
      *
      * @return Response
      */
-    public function updateDealsStatuses(array $dealsToUpdate = []): Response
+    public function updateStatuses(array $params = []): Response
     {
-        return $this->dealPostRequest($dealsToUpdate);
+        return $this->postRequest($params);
     }
 
     /**
@@ -72,7 +98,7 @@ class ContactRequest extends AbstractRequest
      *
      * @return Response
      */
-    private function dealPostRequest(array $params = []): Response
+    private function postRequest(array $params = []): Response
     {
         $this->setRequstUri(
             $this->parameterBag->get('dealAdd')

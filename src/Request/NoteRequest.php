@@ -7,11 +7,11 @@ use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**
- * Class TaskRequest.
+ * Class NoteRequest.
  *
  * @author Vitaly Dergunov <v.dergunov@icontext.ru>
  */
-class TaskRequest extends AbstractRequest
+class NoteRequest extends AbstractRequest
 {
     /**
      * DealRequest constructor.
@@ -28,10 +28,10 @@ class TaskRequest extends AbstractRequest
      *
      * @return array
      */
-    public function getTasksOfDeals(array $deals = []): array
+    public function getNotesOfDeals(array $deals = []): array
     {
         $this->setRequstUri(
-            $this->parameterBag->get('taskGet')
+            $this->parameterBag->get('noteGet')
         );
 
         $limit = 100;
@@ -41,7 +41,7 @@ class TaskRequest extends AbstractRequest
         foreach ($deals as $deal) {
             $this->setQueryParams([
                 'element_id' => $deal['id'],
-                'type' => 'lead',
+                'note_type' => 'lead', // lead/contact/company/customer
                 'limit_rows' => $limit,
                 'limit_offset' => ($offset * $limit),
             ]);
@@ -65,9 +65,9 @@ class TaskRequest extends AbstractRequest
      *
      * @return Response
      */
-    public function addTask(array $params = []): Response
+    public function addNote(array $params = []): Response
     {
-        return $this->taskPostRequest($params);
+        return $this->notePostRequest($params);
     }
 
     /**
@@ -95,10 +95,10 @@ class TaskRequest extends AbstractRequest
      *
      * @return Response
      */
-    private function taskPostRequest(array $params = []): Response
+    private function notePostRequest(array $params = []): Response
     {
         $this->setRequstUri(
-            $this->parameterBag->get('taskAdd')
+            $this->parameterBag->get('noteAdd')
         );
         $this->setHttpMethod('POST');
         $this->addHeader('Content-Type', 'application/json; charset=utf-8');

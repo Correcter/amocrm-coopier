@@ -7,6 +7,9 @@ use AmoCrm\Request\AuthRequest;
 use AmoCrm\Request\ContactRequest;
 use AmoCrm\Request\DealRequest;
 use AmoCrm\Request\FunnelRequest;
+use AmoCrm\Request\CustomerRequest;
+use AmoCrm\Request\CompanyRequest;
+use AmoCrm\Request\NoteRequest;
 use AmoCrm\Request\TaskRequest;
 use AmoCrm\Response\DealResponse;
 use AmoCrm\Service\DealManager;
@@ -51,14 +54,25 @@ class UpdateBasicDealStatusFromTargetCommand extends AbstractCommands
     private $contactRequest;
 
     /**
+     * @var CompanyRequest
+     */
+    private $companyRequest;
+
+    /**
+     * @var NoteRequest
+     */
+    private $noteRequest;
+
+    /**
      * UpdateBasicDealStatusFromTargetCommand constructor.
-     *
-     * @param DealManager     $dealManager
-     * @param AuthRequest     $authRequest
-     * @param DealRequest     $dealRequest
-     * @param FunnelRequest   $funnelRequest
-     * @param TaskRequest     $taskRequest
-     * @param ContactRequest  $contactRequest
+     * @param DealManager $dealManager
+     * @param AuthRequest $authRequest
+     * @param DealRequest $dealRequest
+     * @param FunnelRequest $funnelRequest
+     * @param TaskRequest $taskRequest
+     * @param ContactRequest $contactRequest
+     * @param CompanyRequest $companyRequest
+     * @param NoteRequest $noteRequest
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -68,6 +82,8 @@ class UpdateBasicDealStatusFromTargetCommand extends AbstractCommands
         FunnelRequest $funnelRequest,
         TaskRequest $taskRequest,
         ContactRequest $contactRequest,
+        CompanyRequest $companyRequest,
+        NoteRequest $noteRequest,
         LoggerInterface $logger
     ) {
         parent::__construct($logger);
@@ -78,6 +94,9 @@ class UpdateBasicDealStatusFromTargetCommand extends AbstractCommands
         $this->funnelRequest = $funnelRequest;
         $this->taskRequest = $taskRequest;
         $this->contactRequest = $contactRequest;
+
+        $this->companyRequest = $companyRequest;
+        $this->noteRequest = $noteRequest;
     }
 
     /**

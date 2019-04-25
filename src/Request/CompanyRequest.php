@@ -2,19 +2,19 @@
 
 namespace AmoCrm\Request;
 
-use AmoCrm\Response\TaskResponse;
+use AmoCrm\Response\CompanyResponse;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**
- * Class TaskRequest.
+ * Class CompanyRequest.
  *
  * @author Vitaly Dergunov <v.dergunov@icontext.ru>
  */
-class TaskRequest extends AbstractRequest
+class CompanyRequest extends AbstractRequest
 {
     /**
-     * DealRequest constructor.
+     * CompanyRequest constructor.
      *
      * @param ParameterBag $parameterBag
      */
@@ -28,27 +28,30 @@ class TaskRequest extends AbstractRequest
      *
      * @return array
      */
-    public function getTasksOfDeals(array $deals = []): array
+    public function getCompaniesOfDeals(array $deals = []): array
     {
         $this->setRequstUri(
-            $this->parameterBag->get('taskGet')
+            $this->parameterBag->get('companyGet')
         );
 
         $limit = 100;
         $offset = 0;
-        $dealTasks = [];
+        $companiesOfDeal = [];
 
         foreach ($deals as $deal) {
+            if (!isset($deal['company']['id'])) {
+                throw new \RuntimeException('Отсутствует идентификатор у компании');
+            }
+
             $this->setQueryParams([
-                'element_id' => $deal['id'],
-                'type' => 'lead',
+                'id' => (int) $deal['company']['id'],
                 'limit_rows' => $limit,
                 'limit_offset' => ($offset * $limit),
             ]);
             $this->setHttpMethod('GET');
 
-            $dealTasks[$deal['id']] =
-                new TaskResponse(
+            $companiesOfDeal[$deal['id']] =
+                new CompanyResponse(
                     \GuzzleHttp\json_decode(
                         $this->request()->getBody()->getContents(),
                         true,
@@ -57,7 +60,7 @@ class TaskRequest extends AbstractRequest
                 );
         }
 
-        return $dealTasks;
+        return $companiesOfDeal;
     }
 
     /**
@@ -65,23 +68,23 @@ class TaskRequest extends AbstractRequest
      *
      * @return Response
      */
-    public function addTask(array $params = []): Response
+    public function addCompany(array $params = []): Response
     {
-        return $this->taskPostRequest($params);
+        return $this->postRequest($params);
     }
 
     /**
-     * @param array $tasksToUpdate
+     * @param array $companiesToUpdate
      *
      * @return Response
      */
-    public function updateDealsStatuses(array $tasksToUpdate = []): Response
+    public function updateCompany(array $companiesToUpdate = []): Response
     {
-        return $this->taskPostRequest($tasksToUpdate);
+        return $this->postRequest($companiesToUpdate);
     }
 
     /**
-     * @return TaskRequest
+     * @return CompanyRequest
      */
     public function clearAuth(): self
     {
@@ -95,10 +98,10 @@ class TaskRequest extends AbstractRequest
      *
      * @return Response
      */
-    private function taskPostRequest(array $params = []): Response
+    private function postRequest(array $params = []): Response
     {
         $this->setRequstUri(
-            $this->parameterBag->get('taskAdd')
+            $this->parameterBag->get('companyAdd')
         );
         $this->setHttpMethod('POST');
         $this->addHeader('Content-Type', 'application/json; charset=utf-8');

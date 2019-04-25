@@ -2,15 +2,14 @@
 
 namespace AmoCrm\Service;
 
-//use AmoCrm\Entity\Task;
 use Doctrine\ORM\EntityManager;
 
 /**
- * Class TaskManager.
+ * Class ContactManager.
  *
  * @author Vitaly Dergunov <correcter@inbox.ru>
  */
-class TaskManager
+class ContactManager
 {
     /**
      * @var EntityManager
@@ -28,42 +27,51 @@ class TaskManager
     }
 
     /**
-     * @param array      $newDeals
-     * @param null|array $oldTasks
-     *
+     * @param array $newDeals
+     * @param array|null $oldContacts
      * @return array
      */
-    public static function buildTasksToTarget(array $newDeals = [], array $oldTasks = null): array
+    public static function buildContactsToTarget(array $newDeals = [], array $oldContacts = []): array
     {
-        $toTargetTasks = [];
+        $toTargetContacts = [];
         foreach ($newDeals as $oldDealId => $newDeal) {
             if (!isset($newDeal['_embedded']['items'])) {
                 throw new \RuntimeException('Сделка пуста');
             }
 
             foreach ($newDeal['_embedded']['items'] as $deal) {
-                if (!isset($oldTasks[$oldDealId])) {
+                if (!isset($oldContacts[$oldDealId])) {
                     throw new \RuntimeException('Задачи сделки пусты');
                 }
 
-                foreach ($oldTasks[$oldDealId]->getItems() as $tasks) {
-                    $toTargetTasks[$deal['id']]['add'][] = [
-                        'element_id' => $deal['id'] ?? 0,
-                        'element_type' => $tasks['element_type'],
-                        'complete_till_at' => $tasks['complete_till_at'],
-                        'task_type' => $tasks['task_type'],
-                        'text' => $tasks['text'],
-                        'created_at' => time(),
-                        'updated_at' => time(),
-                        'responsible_user_id' => $tasks['responsible_user_id'],
-                        'is_completed' => $tasks['is_completed'],
-                        'created_by' => $tasks['created_by'],
+                foreach ($oldContacts[$oldDealId]->getItems() as $contact) {
+
+                    $contactTags = [];
+                    if(count($contact['tags'])) {
+                        foreach($contact['tags'] as $tag) {
+                            $contactTags[] = $tag['name'];
+                        }
+                        $contactTags = implode(',', $contactTags);
+                    }
+
+                    $toTargetContacts[$deal['id']]['add'][] = [
+                        'name' => $contact['name'],
+                        'created_at' => $contact['created_at'],
+                        'updated_at' => $contact['updated_at'],
+                        'responsible_user_id' => $contact['responsible_user_id'],
+                        'created_by' => $contact['created_by'],
+                        'company_name' => $contact['company']['name'],
+                        'updated_by' => $contact['updated_by'],
+                        'tags' => $contactTags,
+                        'leads_id' => $contact['leads']['id'],
+                        'customers_id' => $contact['customers'],
                     ];
                 }
+
             }
         }
 
-        return $toTargetTasks;
+        return $toTargetContacts;
     }
 
     /**

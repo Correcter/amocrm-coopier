@@ -5,12 +5,15 @@ namespace AmoCrm\Command;
 use AmoCrm\Exceptions\AuthError;
 use AmoCrm\Exceptions\InvalidRequest;
 use AmoCrm\Request\AuthRequest;
+use AmoCrm\Request\CompanyRequest;
 use AmoCrm\Request\ContactRequest;
 use AmoCrm\Request\DealRequest;
 use AmoCrm\Request\FunnelRequest;
+use AmoCrm\Request\NoteRequest;
 use AmoCrm\Request\TaskRequest;
-use AmoCrm\Response\DealResponse;
 use AmoCrm\Response\TaskResponse;
+use AmoCrm\Service\CompanyManager;
+use AmoCrm\Service\ContactManager;
 use AmoCrm\Service\DealManager;
 use AmoCrm\Service\TaskManager;
 use Psr\Log\LoggerInterface;
@@ -54,6 +57,16 @@ class DealBasicToTargetCommand extends AbstractCommands
     private $contactRequest;
 
     /**
+     * @var CompanyRequest
+     */
+    private $companyRequest;
+
+    /**
+     * @var NoteRequest
+     */
+    private $noteRequest;
+
+    /**
      * DealBasicToTargetCommand constructor.
      *
      * @param DealManager     $dealManager
@@ -62,6 +75,8 @@ class DealBasicToTargetCommand extends AbstractCommands
      * @param FunnelRequest   $funnelRequest
      * @param TaskRequest     $taskRequest
      * @param ContactRequest  $contactRequest
+     * @param CompanyRequest  $companyRequest
+     * @param NoteRequest     $noteRequest
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -71,6 +86,8 @@ class DealBasicToTargetCommand extends AbstractCommands
         FunnelRequest $funnelRequest,
         TaskRequest $taskRequest,
         ContactRequest $contactRequest,
+        CompanyRequest $companyRequest,
+        NoteRequest $noteRequest,
         LoggerInterface $logger
     ) {
         parent::__construct($logger);
@@ -81,6 +98,8 @@ class DealBasicToTargetCommand extends AbstractCommands
         $this->funnelRequest = $funnelRequest;
         $this->taskRequest = $taskRequest;
         $this->contactRequest = $contactRequest;
+        $this->companyRequest = $companyRequest;
+        $this->noteRequest = $noteRequest;
     }
 
     /**
@@ -119,12 +138,15 @@ class DealBasicToTargetCommand extends AbstractCommands
             $socioramaDeals = $this->getDealsByFunnelId($funnelId);
 
             $this->taskRequest->createClient('basicHost');
-            $dealOldTasks = $this->getTasksOfDeals($socioramaDeals);
+            $this->companyRequest->createClient('basicHost');
+            $this->contactRequest->createClient('basicHost');
 
-//            dump($socioramaDeals, $dealOldTasks);
+            //$dealOldTasks = $this->getTasksOfDeals($socioramaDeals);
+            //$oldCompanies = $this->getCompaniesOfDeals($socioramaDeals);
+            $oldContacts = $this->getContactsOfDeals($socioramaDeals);
+
+//            dump($socioramaDeals, $oldCompanies, $oldContacts);
 //            exit;
-
-//            $dealContacts = $this->getContactsOfDeals($socioramaDeals);
 
             $this->clearAuth();
 
@@ -135,11 +157,16 @@ class DealBasicToTargetCommand extends AbstractCommands
             $this->authRequest->createClient('targetHost');
             $this->amoAuth('targetLogin', 'targetHash');
             $this->funnelRequest->createClient('targetHost');
+            $this->taskRequest->createClient('targetHost');
+            $this->dealRequest->createClient('targetHost');
+            $this->companyRequest->createClient('targetHost');
+            $this->contactRequest->createClient('targetHost');
+
             $funnelId = $this->getFunnelIdByFunnelName('Воронка');
 
-            $this->dealRequest->createClient('targetHost');
             $targetFunnelDeals = $this->getDealsByFunnelId($funnelId);
 
+            // Добавление сделок
             $dealsToTargetFunnel =
                 DealManager::getDealsToTarget(
                     [
@@ -156,17 +183,47 @@ class DealBasicToTargetCommand extends AbstractCommands
                 exit;
             }
 
-            $newDeals = $this->addNewTargetDeal($dealsToTargetFunnel)->getItems();
+            $resultDeals = $this->addNewTargetDeal($dealsToTargetFunnel);
 
-            $tasksToTarget =
-                TaskManager::buildTasksToTarget(
-                    $newDeals,
-                    $dealOldTasks
+            // Добавление задач
+//            $tasksToTarget =
+//                TaskManager::buildTasksToTarget(
+//                    $resultDeals,
+//                    $dealOldTasks
+//                );
+//
+//            $resultTasks = $this->addNewTasks($tasksToTarget);
+
+            // Добавление компаний
+//            $companiesToTarget =
+//                CompanyManager::buildCompaniesToTarget(
+//                    $resultDeals,
+//                    $oldCompanies
+//                );
+//
+//            $resultCompanies = $this->addNewCompanies($companiesToTarget);
+
+            // Добавление контактов
+            $contactsToTarget =
+                ContactManager::buildContactsToTarget(
+                    $resultDeals,
+                    $oldContacts
                 );
 
-            $this->addNewTask($tasksToTarget);
+            dump($resultDeals, $oldContacts, $contactsToTarget);
+            exit;
 
-            if (!$newDeals) {
+            $resultContacts = $this->addNewContacts($contactsToTarget);
+
+//            dump(
+//                $resultDeals,
+//                $dealOldTasks,
+//                $tasksToTarget,
+//                $resultTasks
+//            );
+//            exit;
+
+            if (!$resultDeals) {
                 throw new \RuntimeException('Во время добавления сделки произошла ошибка');
             }
 
@@ -214,48 +271,117 @@ class DealBasicToTargetCommand extends AbstractCommands
         $this->taskRequest->setCookie(
             $this->authRequest->getCookie()
         );
+
+        $this->contactRequest->setCookie(
+            $this->authRequest->getCookie()
+        );
+
+        $this->companyRequest->setCookie(
+            $this->authRequest->getCookie()
+        );
+
+        $this->noteRequest->setCookie(
+            $this->authRequest->getCookie()
+        );
     }
 
     /**
-     * @param array $dealsData
+     * @param array $tasksData
      *
-     * @return TaskResponse
+     * @return array
      */
-    private function addNewTask(array $dealsData = [])
+    private function addNewTasks(array $tasksData = []): array
     {
-        return
-            new TaskResponse(
+        $newTasks = [];
+        foreach ($tasksData as $task) {
+            $newTasks[] = new TaskResponse(
                 \GuzzleHttp\json_decode(
                     $this
                         ->taskRequest
-                        ->addTask($dealsData)
+                        ->addTask($task)
                         ->getBody()
                         ->getContents(),
                     true,
                     JSON_UNESCAPED_UNICODE
                 )
             );
+        }
+
+        return $newTasks;
+    }
+
+    /**
+     * @param array $companies
+     *
+     * @return array
+     */
+    private function addNewCompanies(array $companies = []): array
+    {
+        $newCompanies = [];
+        foreach ($companies as $comp) {
+            $newTasks[] = new TaskResponse(
+                \GuzzleHttp\json_decode(
+                    $this
+                        ->companyRequest
+                        ->addCompany($comp)
+                        ->getBody()
+                        ->getContents(),
+                    true,
+                    JSON_UNESCAPED_UNICODE
+                )
+            );
+        }
+
+        return $newCompanies;
+    }
+
+    /**
+     * @param array $contacts
+     *
+     * @return array
+     */
+    private function addNewContacts(array $contacts = []): array
+    {
+        $newContacts = [];
+        foreach ($contacts as $contact) {
+            $newTasks[] = new TaskResponse(
+                \GuzzleHttp\json_decode(
+                    $this
+                        ->contactRequest
+                        ->addContact($contact)
+                        ->getBody()
+                        ->getContents(),
+                    true,
+                    JSON_UNESCAPED_UNICODE
+                )
+            );
+        }
+
+        return $newContacts;
     }
 
     /**
      * @param array $targetDeals
      *
-     * @return DealResponse
+     * @return array
      */
-    private function addNewTargetDeal(array $targetDeals = []): DealResponse
+    private function addNewTargetDeal(array $targetDeals = []): array
     {
-        return
-            new DealResponse(
-                    \GuzzleHttp\json_decode(
-                        $this
-                            ->dealRequest
-                            ->addDeal($targetDeals)
-                            ->getBody()
-                            ->getContents(),
-                        true,
-                        JSON_UNESCAPED_UNICODE
-                    )
-            );
+        $dealsResult = [];
+        foreach ($targetDeals as $oldDealId => $deal) {
+            $dealsResult[$oldDealId] =
+                \GuzzleHttp\json_decode(
+                    $this
+                        ->dealRequest
+                        ->addDeal($deal)
+                        ->getBody()
+                        ->getContents(),
+                    true,
+                    JSON_UNESCAPED_UNICODE
+                );
+        }
+
+        return $dealsResult;
     }
 
     /**
@@ -266,6 +392,16 @@ class DealBasicToTargetCommand extends AbstractCommands
     private function getContactsOfDeals(array $deals = []): array
     {
         return $this->contactRequest->getContactsOfDeals($deals);
+    }
+
+    /**
+     * @param array $deals
+     *
+     * @return array
+     */
+    private function getCompaniesOfDeals(array $deals = []): array
+    {
+        return $this->companyRequest->getCompaniesOfDeals($deals);
     }
 
     /**
@@ -303,5 +439,9 @@ class DealBasicToTargetCommand extends AbstractCommands
         $this->authRequest->clearAuth();
         $this->dealRequest->clearAuth();
         $this->funnelRequest->clearAuth();
+        $this->taskRequest->clearAuth();
+        $this->contactRequest->clearAuth();
+        $this->companyRequest->clearAuth();
+        $this->noteRequest->clearAuth();
     }
 }

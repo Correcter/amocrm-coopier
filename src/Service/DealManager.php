@@ -111,7 +111,7 @@ class DealManager
         }
 
         foreach ($basicData as $newDeal) {
-            $toTargetDeals['add'][] = array_merge([
+            $toTargetDeals[$newDeal['id']]['add'][] = array_merge([
                 'name' => $newDeal['name'],
                 'created_at' => time(),
                 'updated_at' => time(),
