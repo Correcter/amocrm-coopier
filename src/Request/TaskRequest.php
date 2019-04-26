@@ -47,10 +47,16 @@ class TaskRequest extends AbstractRequest
             ]);
             $this->setHttpMethod('GET');
 
+            $taskResult = $this->request()->getBody()->getContents();
+
+            if (!$taskResult) {
+                continue;
+            }
+
             $dealTasks[$deal['id']] =
                 new TaskResponse(
-                    \GuzzleHttp\json_decode(
-                        $this->request()->getBody()->getContents(),
+                    json_decode(
+                        $taskResult,
                         true,
                         JSON_UNESCAPED_UNICODE
                     )

@@ -50,10 +50,16 @@ class ContactRequest extends AbstractRequest
             ]);
             $this->setHttpMethod('GET');
 
+            $companyResult = $this->request()->getBody()->getContents();
+
+            if (!$companyResult) {
+                continue;
+            }
+
             $contactsOfDeals[$deal['id']] =
                 new ContactResponse(
                     \GuzzleHttp\json_decode(
-                        $this->request()->getBody()->getContents(),
+                        $companyResult,
                         true,
                         JSON_UNESCAPED_UNICODE
                     )
@@ -74,7 +80,7 @@ class ContactRequest extends AbstractRequest
     }
 
     /**
-     * @param array $dealsToUpdate
+     * @param array $params
      *
      * @return Response
      */
@@ -84,7 +90,7 @@ class ContactRequest extends AbstractRequest
     }
 
     /**
-     * @return DealRequest
+     * @return ContactRequest
      */
     public function clearAuth(): self
     {
@@ -101,7 +107,7 @@ class ContactRequest extends AbstractRequest
     private function postRequest(array $params = []): Response
     {
         $this->setRequstUri(
-            $this->parameterBag->get('dealAdd')
+            $this->parameterBag->get('contactAdd')
         );
         $this->setHttpMethod('POST');
         $this->addHeader('Content-Type', 'application/json; charset=utf-8');

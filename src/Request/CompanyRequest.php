@@ -40,7 +40,7 @@ class CompanyRequest extends AbstractRequest
 
         foreach ($deals as $deal) {
             if (!isset($deal['company']['id'])) {
-                throw new \RuntimeException('Отсутствует идентификатор у компании');
+                continue;
             }
 
             $this->setQueryParams([
@@ -50,10 +50,16 @@ class CompanyRequest extends AbstractRequest
             ]);
             $this->setHttpMethod('GET');
 
+            $companyResult = $this->request()->getBody()->getContents();
+
+            if (!$companyResult) {
+                continue;
+            }
+
             $companiesOfDeal[$deal['id']] =
                 new CompanyResponse(
                     \GuzzleHttp\json_decode(
-                        $this->request()->getBody()->getContents(),
+                        $companyResult,
                         true,
                         JSON_UNESCAPED_UNICODE
                     )

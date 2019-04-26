@@ -119,8 +119,8 @@ class DealManager
                 'responsible_user_id' => $newDeal['responsible_user_id'],
                 'sale' => $newDeal['sale'],
                 'tags' => $newDeal['tags'],
-                'contacts_id' => $newDeal['contacts']['id'],
-                'company_id' => $newDeal['company']['id'],
+                'contacts_id' => $newDeal['contacts']['id'] ?? [],
+                'company_id' => $newDeal['company']['id'] ?? [],
                 'custom_fields' => $newDeal['custom_fields'],
             ], $newParams);
         }

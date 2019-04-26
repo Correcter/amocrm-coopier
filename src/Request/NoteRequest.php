@@ -30,6 +30,15 @@ class NoteRequest extends AbstractRequest
      */
     public function getNotesOfDeals(array $deals = []): array
     {
+    }
+
+    /**
+     * @param array $params
+     *
+     * @return array
+     */
+    public function getNotes(array $params = []): array
+    {
         $this->setRequstUri(
             $this->parameterBag->get('noteGet')
         );
@@ -38,26 +47,47 @@ class NoteRequest extends AbstractRequest
         $offset = 0;
         $dealTasks = [];
 
-        foreach ($deals as $deal) {
-            $this->setQueryParams([
-                'element_id' => $deal['id'],
-                'note_type' => 'lead', // lead/contact/company/customer
-                'limit_rows' => $limit,
-                'limit_offset' => ($offset * $limit),
-            ]);
-            $this->setHttpMethod('GET');
+        $this->setQueryParams([
+            'element_id' => $params['element_id'],
+            'element_type' => $params['element_type'], // lead/contact/company/customer
+            /*
+             *
+             * 1 DEAL_CREATED,
+             * 2 CONTACT_CREATED,
+             * 3 DEAL_STATUS_CHANGED,
+             * 4 COMMON,
+             * 12 COMPANY_CREATED,
+             * 13 TASK_RESULT,
+             * 25 SYSTEM,
+             * 102 SMS_IN,
+             * 103 SMS_OUT
+             * */
+            'note_type' => '',
+            'limit_rows' => $limit,
+            'limit_offset' => ($offset * $limit),
+        ]);
+        $this->setHttpMethod('GET');
 
-            $dealTasks[$deal['id']] =
-                new TaskResponse(
-                    \GuzzleHttp\json_decode(
-                        $this->request()->getBody()->getContents(),
-                        true,
-                        JSON_UNESCAPED_UNICODE
-                    )
-                );
-        }
+        $notes[$deal['id']] =
+            new TaskResponse(
+                \GuzzleHttp\json_decode(
+                    $this->request()->getBody()->getContents(),
+                    true,
+                    JSON_UNESCAPED_UNICODE
+                )
+            );
 
         return $dealTasks;
+    }
+
+    /**
+     * @param array $contacts
+     *
+     * @return array
+     */
+    public function getNotesOfContacts(array $contacts = []): array
+    {
+        return $this->noteRequest->getNotesOfContacts($contacts);
     }
 
     /**
@@ -71,23 +101,33 @@ class NoteRequest extends AbstractRequest
     }
 
     /**
-     * @param array $tasksToUpdate
-     *
-     * @return Response
-     */
-    public function updateDealsStatuses(array $tasksToUpdate = []): Response
-    {
-        return $this->taskPostRequest($tasksToUpdate);
-    }
-
-    /**
-     * @return TaskRequest
+     * @return NoteRequest
      */
     public function clearAuth(): self
     {
         $this->clearCookie();
 
         return $this;
+    }
+
+    /**
+     * @param array $tasks
+     *
+     * @return array
+     */
+    protected function getNotesOfTasks(array $tasks = []): array
+    {
+        return $this->noteRequest->getNotesOfContacts($tasks);
+    }
+
+    /**
+     * @param array $companies
+     *
+     * @return array
+     */
+    protected function getNotesOfCompanies(array $companies = []): array
+    {
+        return $this->noteRequest->getNotesOfCompanies($companies);
     }
 
     /**

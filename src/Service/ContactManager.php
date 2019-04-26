@@ -27,81 +27,50 @@ class ContactManager
     }
 
     /**
-     * @param array $newDeals
-     * @param array|null $oldContacts
+     * @param array      $newDeals
+     * @param null|array $oldContacts
+     *
      * @return array
      */
     public static function buildContactsToTarget(array $newDeals = [], array $oldContacts = []): array
     {
         $toTargetContacts = [];
-        foreach ($newDeals as $oldDealId => $newDeal) {
-            if (!isset($newDeal['_embedded']['items'])) {
-                throw new \RuntimeException('Сделка пуста');
-            }
 
-            foreach ($newDeal['_embedded']['items'] as $deal) {
-                if (!isset($oldContacts[$oldDealId])) {
-                    throw new \RuntimeException('Задачи сделки пусты');
+        foreach ($oldContacts  as $oldDealId => $contactItems) {
+            foreach ($contactItems->getItems() as $contact) {
+                $dealIds = [];
+                if (!isset($newDeals[$oldDealId]['_embedded']['items'])) {
+                    throw new \RuntimeException('Невозможно обновить контакты. Сделка пуста');
                 }
 
-                foreach ($oldContacts[$oldDealId]->getItems() as $contact) {
+                foreach ($newDeals[$oldDealId]['_embedded']['items'] as $deal) {
+                    $dealIds[] = $deal['id'];
+                }
 
-                    $contactTags = [];
-                    if(count($contact['tags'])) {
-                        foreach($contact['tags'] as $tag) {
-                            $contactTags[] = $tag['name'];
-                        }
-                        $contactTags = implode(',', $contactTags);
+                $contactTags = [];
+                if (count($contact['tags'])) {
+                    foreach ($contact['tags'] as $tag) {
+                        $contactTags[] = $tag['name'];
                     }
-
-                    $toTargetContacts[$deal['id']]['add'][] = [
-                        'name' => $contact['name'],
-                        'created_at' => $contact['created_at'],
-                        'updated_at' => $contact['updated_at'],
-                        'responsible_user_id' => $contact['responsible_user_id'],
-                        'created_by' => $contact['created_by'],
-                        'company_name' => $contact['company']['name'],
-                        'updated_by' => $contact['updated_by'],
-                        'tags' => $contactTags,
-                        'leads_id' => $contact['leads']['id'],
-                        'customers_id' => $contact['customers'],
-                    ];
+                    $contactTags = implode(',', $contactTags);
                 }
 
+                $toTargetContacts[$oldDealId]['add'][] = [
+                    'name' => $contact['name'],
+                    'created_at' => $contact['created_at'],
+                    'updated_at' => $contact['updated_at'],
+                    'responsible_user_id' => $contact['responsible_user_id'],
+                    'created_by' => $contact['created_by'],
+                    'company_name' => $contact['company']['name'] ?? null,
+                    'tags' => $contactTags,
+                    'leads_id' => implode(',', $dealIds),
+                    'customers_id' => implode(',', $contact['customers']['id'] ?? []),
+                    'company_id' => $contact['company']['id'] ?? null,
+                    'custom_fields' => $contact['custom_fields'],
+                ];
             }
         }
 
         return $toTargetContacts;
-    }
-
-    /**
-     * @param array $newParams
-     * @param array $icTurboDeals
-     * @param array $targetRunningDealNames
-     *
-     * @return array
-     */
-    public static function updateBasicFromTargetArray(array $newParams = [], array $icTurboDeals = [], array $targetRunningDealNames = []): array
-    {
-        $toUpdateBasicDeals = [];
-        foreach ($targetRunningDealNames as $dealName) {
-            foreach ($icTurboDeals as $deal) {
-                if ($deal['name'] === $dealName) {
-                    $toUpdateBasicDeals['update'][] =
-                    array_merge(
-                        [
-                        'id' => $deal['id'],
-                        'updated_at' => time(),
-                        'sale' => $deal['sale'],
-                        'status_id' => $deal['status_id'],
-                        'custom_fields' => $deal['custom_fields'],
-                        ],
-                        $newParams
-                    );
-                }
-            }
-        }
-
-        return $toUpdateBasicDeals;
     }
 }

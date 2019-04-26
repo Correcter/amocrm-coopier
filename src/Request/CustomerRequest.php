@@ -2,6 +2,7 @@
 
 namespace AmoCrm\Request;
 
+use AmoCrm\Response\CustomerResponse;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
@@ -23,69 +24,49 @@ class CustomerRequest extends AbstractRequest
     }
 
     /**
-     * @param array $dealsData
+     * @param array $deals
      *
      * @return array
      */
-    public function getCustomer(array $dealsData = []): array
+    public function getCustomer(array $deals = []): array
     {
         $this->setRequstUri(
-            $this->parameterBag->get('dealGet')
+            $this->parameterBag->get('customerGet')
         );
 
         $limit = 100;
         $offset = 0;
-        $actualDeals = [];
+        $customerOfDeals = [];
 
-        do {
-            $hasNeedle = false;
+        foreach ($deals as $deal) {
+            if (!isset($deal['contacts']['id'])) {
+                throw new \RuntimeException('Отсутствует идентификаторы у контактов');
+            }
+
             $this->setQueryParams([
+                'id' => $deal['contacts']['id'],
                 'limit_rows' => $limit,
                 'limit_offset' => ($offset * $limit),
             ]);
             $this->setHttpMethod('GET');
 
-            $requestBody = $this->request()->getBody();
+            $customerResult = $this->request()->getBody()->getContents();
 
-            //dump($limit, ($offset * $limit), $requestBody->getSize());
-
-            while ($line = $requestBody->read(1000)) {
-                if (false !== strpos($line, '"pipeline_id":'.$funnelId)) {
-                    $hasNeedle = true;
-
-                    break;
-                }
+            if (!$customerResult) {
+                continue;
             }
 
-            if ($hasNeedle) {
-                $dealsFilter =
-                    new \AmoCrm\Response\DealResponse(
-                        \GuzzleHttp\json_decode(
-                            $this->request()->getBody()->getContents(),
-                            true,
-                            JSON_UNESCAPED_UNICODE
-                        )
-                    );
+            $customerOfDeals[$deal['id']] =
+                new CustomerResponse(
+                    \GuzzleHttp\json_decode(
+                        $customerResult,
+                        true,
+                        JSON_UNESCAPED_UNICODE
+                    )
+                );
+        }
 
-                if (null === $statusId) {
-                    foreach ($dealsFilter->getItems() as $deal) {
-                        if ($deal['pipeline_id'] === $funnelId) {
-                            $actualDeals[$deal['id']] = $deal;
-                        }
-                    }
-                } else {
-                    foreach ($dealsFilter->getItems() as $deal) {
-                        if ($deal['pipeline_id'] === $funnelId && $deal['status_id'] === $statusId) {
-                            $actualDeals[$deal['id']] = $deal['name'];
-                        }
-                    }
-                }
-            }
-
-            ++$offset;
-        } while ($requestBody->getSize());
-
-        return $actualDeals;
+        return $customerOfDeals;
     }
 
     /**
@@ -93,23 +74,23 @@ class CustomerRequest extends AbstractRequest
      *
      * @return Response
      */
-    public function addDeal(array $params = []): Response
+    public function addCustomer(array $params = []): Response
     {
-        return $this->dealPostRequest($params);
+        return $this->postRequest($params);
     }
 
     /**
-     * @param array $dealsToUpdate
+     * @param array $customersToUpdate
      *
      * @return Response
      */
-    public function updateDealsStatuses(array $dealsToUpdate = []): Response
+    public function updateCustomer(array $customersToUpdate = []): Response
     {
-        return $this->dealPostRequest($dealsToUpdate);
+        return $this->postRequest($customersToUpdate);
     }
 
     /**
-     * @return DealRequest
+     * @return CustomerRequest
      */
     public function clearAuth(): self
     {
@@ -123,10 +104,10 @@ class CustomerRequest extends AbstractRequest
      *
      * @return Response
      */
-    private function dealPostRequest(array $params = []): Response
+    private function postRequest(array $params = []): Response
     {
         $this->setRequstUri(
-            $this->parameterBag->get('dealAdd')
+            $this->parameterBag->get('customerAdd')
         );
         $this->setHttpMethod('POST');
         $this->addHeader('Content-Type', 'application/json; charset=utf-8');
