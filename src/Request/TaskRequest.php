@@ -34,16 +34,12 @@ class TaskRequest extends AbstractRequest
             $this->parameterBag->get('taskGet')
         );
 
-        $limit = 100;
-        $offset = 0;
         $dealTasks = [];
 
         foreach ($deals as $deal) {
             $this->setQueryParams([
                 'element_id' => $deal['id'],
                 'type' => 'lead',
-                'limit_rows' => $limit,
-                'limit_offset' => ($offset * $limit),
             ]);
             $this->setHttpMethod('GET');
 

@@ -89,6 +89,18 @@ class DealManager
         return true;
     }
 
+    public function buildCustomFields(array $deals = [])
+    {
+        $dealsCustomFields = [];
+        foreach ($deals as $deal) {
+            foreach ($deal['custom_fields'] as $customFields) {
+                $dealsCustomFields[$deals['id']][] = [
+                    'name' => $customFields['name'],
+                ];
+            }
+        }
+    }
+
     /**
      * @param array $newParams
      * @param array $basicData

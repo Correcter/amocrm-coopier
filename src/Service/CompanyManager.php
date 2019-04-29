@@ -27,28 +27,43 @@ class CompanyManager
     }
 
     /**
-     * @param array $newDeals
-     * @param array $oldCompanies
-     * @param array $newContacts
+     * @param null|string $operationType
+     * @param array       $arrayOfParams
      *
      * @return array
      */
-    public static function buildCompaniesToTarget(array $newDeals = [], array $oldCompanies = [], array $newContacts = []): array
+    public static function buildCompaniesToTarget(string $operationType = null, array $arrayOfParams = []): array
     {
+        if (!$operationType) {
+            throw new \RuntimeException('Тип операций с компаниями не указан');
+        }
+
+        if (!isset($arrayOfParams['resultDeals'])) {
+            throw new \RuntimeException('Сделки для компаний не определены');
+        }
+
+        if (!isset($arrayOfParams['oldCompanies'])) {
+            throw new \RuntimeException('Старые компании не определены');
+        }
+
+        if (!isset($arrayOfParams['resultContacts'])) {
+            throw new \RuntimeException('Новые контакты не определены');
+        }
+
         $toTargetCompanies = [];
-        foreach ($oldCompanies as $oldDealId => $companyItems) {
+        foreach ($arrayOfParams['oldCompanies'] as $oldDealId => $companyItems) {
             foreach ($companyItems->getItems() as $company) {
                 $dealIds = [];
                 $contactIds = [];
-                if (!isset($newDeals[$oldDealId]['_embedded']['items'])) {
+                if (!isset($arrayOfParams['resultDeals'][$oldDealId]['_embedded']['items'])) {
                     throw new \RuntimeException('Невозможно обновить контакты. Сделка пуста');
                 }
 
-                foreach ($newDeals[$oldDealId]['_embedded']['items'] as $deal) {
+                foreach ($arrayOfParams['resultDeals'][$oldDealId]['_embedded']['items'] as $deal) {
                     $dealIds[] = $deal['id'];
                 }
 
-                foreach ($newContacts[$oldDealId]->getItems() as $contact) {
+                foreach ($arrayOfParams['resultContacts'][$oldDealId]->getItems() as $contact) {
                     $contactIds[] = $contact['id'];
                 }
 

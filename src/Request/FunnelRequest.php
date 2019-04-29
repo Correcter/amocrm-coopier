@@ -44,12 +44,19 @@ class FunnelRequest extends AbstractRequest
      */
     public function getFunnelIdByFunnelName(Response $response = null, string $funnelName = null)
     {
+        $result = $response->getBody()->getContents();
+
+        if (!$result) {
+            return null;
+        }
+
         $basicFunnels = new \AmoCrm\Response\DealResponse(
             \GuzzleHttp\json_decode(
-                $response->getBody()->getContents(),
+                $result,
                 true
             )
         );
+        unset($result);
 
         // iConText
         foreach ($basicFunnels->getItems() as $funnel) {

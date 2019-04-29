@@ -34,8 +34,6 @@ class CompanyRequest extends AbstractRequest
             $this->parameterBag->get('companyGet')
         );
 
-        $limit = 100;
-        $offset = 0;
         $companiesOfDeal = [];
 
         foreach ($deals as $deal) {
@@ -45,8 +43,6 @@ class CompanyRequest extends AbstractRequest
 
             $this->setQueryParams([
                 'id' => (int) $deal['company']['id'],
-                'limit_rows' => $limit,
-                'limit_offset' => ($offset * $limit),
             ]);
             $this->setHttpMethod('GET');
 

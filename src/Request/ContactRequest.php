@@ -34,8 +34,6 @@ class ContactRequest extends AbstractRequest
             $this->parameterBag->get('contactGet')
         );
 
-        $limit = 100;
-        $offset = 0;
         $contactsOfDeals = [];
 
         foreach ($deals as $deal) {
@@ -45,8 +43,6 @@ class ContactRequest extends AbstractRequest
 
             $this->setQueryParams([
                 'id' => $deal['contacts']['id'],
-                'limit_rows' => $limit,
-                'limit_offset' => ($offset * $limit),
             ]);
             $this->setHttpMethod('GET');
 

@@ -27,23 +27,34 @@ class ContactManager
     }
 
     /**
-     * @param array      $newDeals
-     * @param null|array $oldContacts
-     *
+     * @param string|null $operationType
+     * @param array $arrayOfParams
      * @return array
      */
-    public static function buildContactsToTarget(array $newDeals = [], array $oldContacts = []): array
+    public static function buildContactsToTarget(string $operationType = null, array $arrayOfParams = []): array
     {
         $toTargetContacts = [];
 
-        foreach ($oldContacts  as $oldDealId => $contactItems) {
+        if (!$operationType) {
+            throw new \RuntimeException('Тип операций с контактами не указан');
+        }
+
+        if(!isset($arrayOfParams['resultDeals'])) {
+            throw new \RuntimeException('Сделки для контактов не определены');
+        }
+
+        if(!isset($arrayOfParams['oldContacts'])) {
+            throw new \RuntimeException('Контакты для компании не определены');
+        }
+
+        foreach ($arrayOfParams['oldContacts']  as $oldDealId => $contactItems) {
             foreach ($contactItems->getItems() as $contact) {
                 $dealIds = [];
-                if (!isset($newDeals[$oldDealId]['_embedded']['items'])) {
+                if (!isset($arrayOfParams['resultDeals'][$oldDealId]['_embedded']['items'])) {
                     throw new \RuntimeException('Невозможно обновить контакты. Сделка пуста');
                 }
 
-                foreach ($newDeals[$oldDealId]['_embedded']['items'] as $deal) {
+                foreach ($arrayOfParams['resultDeals'][$oldDealId]['_embedded']['items'] as $deal) {
                     $dealIds[] = $deal['id'];
                 }
 
@@ -55,13 +66,13 @@ class ContactManager
                     $contactTags = implode(',', $contactTags);
                 }
 
-                $toTargetContacts[$oldDealId]['add'][] = [
+                $toTargetContacts[$oldDealId][$operationType][] = [
                     'name' => $contact['name'],
                     'created_at' => $contact['created_at'],
                     'updated_at' => $contact['updated_at'],
                     'responsible_user_id' => $contact['responsible_user_id'],
                     'created_by' => $contact['created_by'],
-                    'company_name' => $contact['company']['name'] ?? null,
+                    //'company_name' => $contact['company']['name'] ?? null,
                     'tags' => $contactTags,
                     'leads_id' => implode(',', $dealIds),
                     'customers_id' => implode(',', $contact['customers']['id'] ?? []),

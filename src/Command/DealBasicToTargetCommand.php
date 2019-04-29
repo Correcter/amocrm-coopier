@@ -142,19 +142,22 @@ class DealBasicToTargetCommand extends AbstractCommands
             $this->taskRequest->createClient('basicHost');
             $this->companyRequest->createClient('basicHost');
             $this->contactRequest->createClient('basicHost');
+            $this->noteRequest->createClient('basicHost');
 
-            $oldTasks = $this->getTasksOfDeals($socioramaDeals);
-            $oldContacts = $this->getContactsOfDeals($socioramaDeals);
-            $oldCompanies = $this->getCompaniesOfDeals($socioramaDeals);
+            $oldTasks = $this->taskRequest->getTasksOfDeals($socioramaDeals);
+
+            $oldContacts = $this->contactRequest->getContactsOfDeals($socioramaDeals);
+            $oldCompanies = $this->companyRequest->getCompaniesOfDeals($socioramaDeals);
 
             // События (примечания для всех сущностей)
-            $oldNotesOfDeals = $this->getNotesOfDeals($socioramaDeals);
-            $oldNotesOfContacts = $this->getNotesOfContacts($oldContacts);
-            $oldNotesOfTasks = $this->getNotesOfTasks($oldTasks);
-            $oldNotesOfCompanies = $this->getNotesOfCompanies($oldCompanies);
-
-//            dump($socioramaDeals, $oldCompanies);
-//            exit;
+//            $oldNotesOfDeals = $this->noteRequest->getNotesOfDeals(
+//                [
+//                    new \AmoCrm\Response\DealPack($socioramaDeals),
+//                ]
+//            );
+//            $oldNotesOfContacts = $this->noteRequest->getNotesOfContacts($oldContacts);
+//            $oldNotesOfTasks = $this->noteRequest->getNotesOfTasks($oldTasks);
+//            $oldNotesOfCompanies = $this->noteRequest->getNotesOfCompanies($oldCompanies);
 
             $this->clearAuth();
 
@@ -169,10 +172,17 @@ class DealBasicToTargetCommand extends AbstractCommands
             $this->dealRequest->createClient('targetHost');
             $this->companyRequest->createClient('targetHost');
             $this->contactRequest->createClient('targetHost');
+            $this->noteRequest->createClient('targetHost');
 
             $funnelId = $this->getFunnelIdByFunnelName('Воронка');
 
-            $targetFunnelDeals = $this->getDealsByFunnelId($funnelId);
+            $targetFunnelDeals = $this->dealRequest->getDealsByFunnelId($funnelId);
+
+
+            // Собираем дополнительные поля сделок
+            $dealsCustomFields = DealManager::buildCustomFields($socioramaDeals);
+
+
 
             // Добавление сделок
             $dealsToTargetFunnel =
@@ -183,6 +193,12 @@ class DealBasicToTargetCommand extends AbstractCommands
                     $socioramaDeals,
                     $targetFunnelDeals
                 );
+
+            dump(
+                $socioramaDeals,
+                $dealsToTargetFunnel
+            );
+            exit;
 
             if (!$dealsToTargetFunnel) {
                 $mess = 'Количество сделок в "Воронка" актуально. Действие не требуется.';
@@ -205,23 +221,52 @@ class DealBasicToTargetCommand extends AbstractCommands
             // Добавление контактов
             $contactsToTarget =
                 ContactManager::buildContactsToTarget(
-                    $resultDeals,
-                    $oldContacts
+                    'add',
+                    [
+                        'resultDeals' => $resultDeals,
+                        'oldContacts' => $oldContacts,
+                    ]
                 );
 
-            $resultContacts = $this->addNewContacts($contactsToTarget);
+            $resultContacts = $this->contactRequest($contactsToTarget);
 
             // Добавление компаний
             $companiesToTarget =
                 CompanyManager::buildCompaniesToTarget(
-                    $resultDeals,
-                    $oldCompanies,
-                    $resultContacts
+                    'add',
+                    [
+                        'resultDeals' => $resultDeals,
+                        'oldCompanies' => $oldCompanies,
+                        'resultContacts' => $resultContacts,
+                    ]
                 );
 
-            $resultCompanies = $this->addNewCompanies($companiesToTarget);
+            $resultCompanies = $this->companyRequest($companiesToTarget);
+
+            dump($companiesToTarget, $resultCompanies);
+            exit;
+
+            $contactsToTarget =
+                ContactManager::buildContactsToTarget(
+                    'update',
+                    [
+                        'resultDeals' => $resultDeals,
+                        'oldContacts' => $oldContacts,
+                        'resultCompanies' => $resultCompanies,
+                    ]
+                );
+
+            $resultContacts = $this->contactRequest($contactsToTarget);
 
             dump(
+                $dealsToTargetFunnel,
+                $tasksToTarget,
+                $contactsToTarget,
+                $companiesToTarget
+            );
+
+            dump(
+                'Результаты:',
                 $resultDeals,
                 $resultTasks,
                 $resultContacts,
@@ -321,22 +366,33 @@ class DealBasicToTargetCommand extends AbstractCommands
      *
      * @return array
      */
-    protected function addNewCompanies(array $companies = []): array
+    protected function companyRequest(array $companies = []): array
     {
         $newCompanies = [];
         foreach ($companies as $oldDealId => $comp) {
+            $companyResult =
+                $this
+                    ->companyRequest
+                    ->addCompany($comp)
+                    ->getBody()
+                    ->getContents();
+
+            dump($comp, $companyResult);
+
+            if (!$companyResult) {
+                continue;
+            }
+
             $newCompanies[$oldDealId] = new CompanyResponse(
                 \GuzzleHttp\json_decode(
-                    $this
-                        ->companyRequest
-                        ->addCompany($comp)
-                        ->getBody()
-                        ->getContents(),
+                    $companyResult,
                     true,
                     JSON_UNESCAPED_UNICODE
                 )
             );
         }
+
+        exit;
 
         return $newCompanies;
     }
@@ -346,7 +402,7 @@ class DealBasicToTargetCommand extends AbstractCommands
      *
      * @return array
      */
-    protected function addNewContacts(array $contacts = []): array
+    protected function contactRequest(array $contacts = []): array
     {
         $newContacts = [];
         foreach ($contacts  as $oldDealId => $contact) {
@@ -388,45 +444,6 @@ class DealBasicToTargetCommand extends AbstractCommands
         }
 
         return $dealsResult;
-    }
-
-
-    /**
-     * @param array $deals
-     *
-     * @return array
-     */
-    protected function getNotesOfDeals(array $deals = []): array
-    {
-        return $this->noteRequest->getNotesOfDeals($deals);
-    }
-
-    /**
-     * @param array $contacts
-     *
-     * @return array
-     */
-    protected function getNotesOfContacts(array $contacts = []): array
-    {
-        return $this->noteRequest->getNotesOfContacts($contacts);
-    }
-
-    /**
-     * @param array $tasks
-     * @return array
-     */
-    protected function getNotesOfTasks(array $tasks = []): array
-    {
-        return $this->noteRequest->getNotesOfContacts($tasks);
-    }
-
-    /**
-     * @param array $companies
-     * @return array
-     */
-    protected function getNotesOfCompanies(array $companies = []): array
-    {
-        return $this->noteRequest->getNotesOfCompanies($companies);
     }
 
     /**

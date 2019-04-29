@@ -2,7 +2,7 @@
 
 namespace AmoCrm\Request;
 
-use AmoCrm\Response\TaskResponse;
+use AmoCrm\Response\NoteResponse;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
@@ -24,20 +24,12 @@ class NoteRequest extends AbstractRequest
     }
 
     /**
-     * @param array $deals
-     *
-     * @return array
-     */
-    public function getNotesOfDeals(array $deals = []): array
-    {
-    }
-
-    /**
+     * @param array $entityData
      * @param array $params
      *
      * @return array
      */
-    public function getNotes(array $params = []): array
+    public function getNotes(array $entityData = [], array $params = []): array
     {
         $this->setRequstUri(
             $this->parameterBag->get('noteGet')
@@ -45,49 +37,125 @@ class NoteRequest extends AbstractRequest
 
         $limit = 100;
         $offset = 0;
-        $dealTasks = [];
+        $notes = [];
 
-        $this->setQueryParams([
-            'element_id' => $params['element_id'],
-            'element_type' => $params['element_type'], // lead/contact/company/customer
-            /*
-             *
-             * 1 DEAL_CREATED,
-             * 2 CONTACT_CREATED,
-             * 3 DEAL_STATUS_CHANGED,
-             * 4 COMMON,
-             * 12 COMPANY_CREATED,
-             * 13 TASK_RESULT,
-             * 25 SYSTEM,
-             * 102 SMS_IN,
-             * 103 SMS_OUT
-             * */
-            'note_type' => '',
-            'limit_rows' => $limit,
-            'limit_offset' => ($offset * $limit),
-        ]);
-        $this->setHttpMethod('GET');
+        foreach ($entityData as $oldNodeId => $node) {
+            foreach ($node->getItems() as $item) {
+                $this->setQueryParams([
+                    'type' => $params['type'], // contact/lead/company/task
+                    'element_id' => $item['id'],
+                    /*
+                     *
+                     * 1 DEAL_CREATED,
+                     * 2 CONTACT_CREATED,
+                     * 3 DEAL_STATUS_CHANGED,
+                     * 4 COMMON,
+                     * 12 COMPANY_CREATED,
+                     * 13 TASK_RESULT,
+                     * 25 SYSTEM,
+                     * 102 SMS_IN,
+                     * 103 SMS_OUT
+                     * */
+                    //'note_type' => $params['note_type'],
+                    'limit_rows' => $limit,
+                    'limit_offset' => ($offset * $limit),
+                ]);
+                $this->setHttpMethod('GET');
 
-        $notes[$deal['id']] =
-            new TaskResponse(
-                \GuzzleHttp\json_decode(
-                    $this->request()->getBody()->getContents(),
-                    true,
-                    JSON_UNESCAPED_UNICODE
-                )
-            );
+                $result = $this->request()->getBody()->getContents();
 
-        return $dealTasks;
+                if (!$result) {
+                    continue;
+                }
+
+                $notes[$item['id']] =
+                    new NoteResponse(
+                        \GuzzleHttp\json_decode(
+                            $result,
+                            true,
+                            JSON_UNESCAPED_UNICODE
+                        )
+                    );
+                ++$offset;
+            }
+        }
+
+        return $notes;
     }
 
     /**
-     * @param array $contacts
+     * @param array $entityData
+     * @param array $params
      *
      * @return array
      */
-    public function getNotesOfContacts(array $contacts = []): array
+    public function getNotesOfDeals(array $entityData = [], array $params = []): array
     {
-        return $this->noteRequest->getNotesOfContacts($contacts);
+        $params = array_merge([
+           'type' => 'lead',
+        ], $params);
+
+        return $this->getNotes($entityData, $params);
+    }
+
+    /**
+     * @param array $entityData
+     * @param array $params
+     *
+     * @return array
+     */
+    public function getNotesOfContacts(array $entityData = [], array $params = []): array
+    {
+        $params = array_merge([
+            'type' => 'contact',
+        ], $params);
+
+        return $this->getNotes($entityData, $params);
+    }
+
+    /**
+     * @param array $entityData
+     * @param array $params
+     *
+     * @return array
+     */
+    public function getNotesOfCompanies(array $entityData = [], array $params = []): array
+    {
+        $params = array_merge([
+            'type' => 'company',
+        ], $params);
+
+        return $this->getNotes($entityData, $params);
+    }
+
+    /**
+     * @param array $entityData
+     * @param array $params
+     *
+     * @return array
+     */
+    public function getNotesOfTasks(array $entityData = [], array $params = []): array
+    {
+        $params = array_merge([
+            'type' => 'task',
+        ], $params);
+
+        return $this->getNotes($entityData, $params);
+    }
+
+    /**
+     * @param array $entityData
+     * @param array $params
+     *
+     * @return array
+     */
+    public function getCommonNotes(array $entityData = [], array $params = []): array
+    {
+        $params = array_merge([
+            'note_type' => 'COMMON',
+        ], $params);
+
+        return $this->getNotes($entityData, $params);
     }
 
     /**
@@ -108,26 +176,6 @@ class NoteRequest extends AbstractRequest
         $this->clearCookie();
 
         return $this;
-    }
-
-    /**
-     * @param array $tasks
-     *
-     * @return array
-     */
-    protected function getNotesOfTasks(array $tasks = []): array
-    {
-        return $this->noteRequest->getNotesOfContacts($tasks);
-    }
-
-    /**
-     * @param array $companies
-     *
-     * @return array
-     */
-    protected function getNotesOfCompanies(array $companies = []): array
-    {
-        return $this->noteRequest->getNotesOfCompanies($companies);
     }
 
     /**

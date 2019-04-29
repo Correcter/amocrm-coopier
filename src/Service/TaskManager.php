@@ -43,7 +43,7 @@ class TaskManager
 
             foreach ($newDeal['_embedded']['items'] as $deal) {
                 if (!isset($oldTasks[$oldDealId])) {
-                    throw new \RuntimeException('Задачи сделки пусты');
+                    continue;
                 }
 
                 foreach ($oldTasks[$oldDealId]->getItems() as $tasks) {
