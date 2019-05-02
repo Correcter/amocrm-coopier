@@ -89,7 +89,7 @@ abstract class AbstractRequest
      *
      * @param ParameterBag $parameterBag
      */
-    public function __construct(ParameterBag $parameterBag)
+    protected function __construct(ParameterBag $parameterBag)
     {
         $this->headers = [];
         $this->queryParams = [];
@@ -122,7 +122,7 @@ abstract class AbstractRequest
     /**
      * @return null|string
      */
-    public function getBaseUrl(): ?string
+    protected function getBaseUrl(): ?string
     {
         return $this->baseUrl;
     }
@@ -132,7 +132,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setBaseUrl(string $baseUrl = null): self
+    protected function setBaseUrl(string $baseUrl = null): self
     {
         $this->baseUrl = $baseUrl;
 
@@ -142,7 +142,7 @@ abstract class AbstractRequest
     /**
      * @return null|string
      */
-    public function getHttpMethod(): ?string
+    protected function getHttpMethod(): ?string
     {
         return $this->httpMethod;
     }
@@ -152,7 +152,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setHttpMethod(string $httpMethod = null): self
+    protected function setHttpMethod(string $httpMethod = null): self
     {
         $this->httpMethod = $httpMethod;
 
@@ -162,7 +162,7 @@ abstract class AbstractRequest
     /**
      * @return null|string
      */
-    public function getRequstUri(): ?string
+    protected function getRequstUri(): ?string
     {
         return $this->requstUri;
     }
@@ -172,7 +172,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setRequstUri(string $requstUri = null): self
+    protected function setRequstUri(string $requstUri = null): self
     {
         $this->requstUri = $requstUri;
 
@@ -182,7 +182,7 @@ abstract class AbstractRequest
     /**
      * @return array
      */
-    public function getQueryParams(): ?array
+    protected function getQueryParams(): ?array
     {
         return $this->queryParams;
     }
@@ -192,7 +192,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setQueryParams(array $queryParams = []): self
+    protected function setQueryParams(array $queryParams = []): self
     {
         $this->queryParams = $queryParams;
 
@@ -202,7 +202,7 @@ abstract class AbstractRequest
     /**
      * @return null|string
      */
-    public function getBody(): ?string
+    protected function getBody(): ?string
     {
         return $this->body;
     }
@@ -212,7 +212,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setBody(string $body = null): self
+    protected function setBody(string $body = null): self
     {
         $this->body = $body;
 
@@ -222,7 +222,7 @@ abstract class AbstractRequest
     /**
      * @return null|array
      */
-    public function getFormParams(): ?array
+    protected function getFormParams(): ?array
     {
         return $this->formParams;
     }
@@ -232,7 +232,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setFormParams(array $formParams = []): self
+    protected function setFormParams(array $formParams = []): self
     {
         $this->formParams = $formParams;
 
@@ -242,7 +242,7 @@ abstract class AbstractRequest
     /**
      * @return array
      */
-    public function getHeaders(): array
+    protected function getHeaders(): array
     {
         return $this->headers;
     }
@@ -253,7 +253,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function addHeader(string $key = null, $value = null): self
+    protected function addHeader(string $key = null, $value = null): self
     {
         if (!isset($this->headers[$key])) {
             $this->headers[$key] = $value;
@@ -267,7 +267,7 @@ abstract class AbstractRequest
      *
      * @return bool
      */
-    public function removeHeader(string $key): bool
+    protected function removeHeader(string $key): bool
     {
         return $this->headers[$key];
     }
@@ -275,7 +275,7 @@ abstract class AbstractRequest
     /**
      * @return bool
      */
-    public function isStream(): bool
+    protected function isStream(): bool
     {
         return $this->stream;
     }
@@ -285,7 +285,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setStream(bool $stream = null): self
+    protected function setStream(bool $stream = null): self
     {
         $this->stream = $stream;
 
@@ -295,7 +295,7 @@ abstract class AbstractRequest
     /**
      * @return null|int
      */
-    public function getReadTimeout(): ?int
+    protected function getReadTimeout(): ?int
     {
         return $this->readTimeout;
     }
@@ -305,7 +305,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setReadTimeout(int $readTimeout = null): self
+    protected function setReadTimeout(int $readTimeout = null): self
     {
         $this->readTimeout = $readTimeout;
 
@@ -315,7 +315,7 @@ abstract class AbstractRequest
     /**
      * @return null|int
      */
-    public function getConnectTimeout(): ?int
+    protected function getConnectTimeout(): ?int
     {
         return $this->connectTimeout;
     }
@@ -325,7 +325,7 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setConnectTimeout(int $connectTimeout = null): self
+    protected function setConnectTimeout(int $connectTimeout = null): self
     {
         $this->connectTimeout = $connectTimeout;
 
@@ -355,7 +355,7 @@ abstract class AbstractRequest
     /**
      * @return AbstractRequest
      */
-    public function clearCookie(): self
+    protected function clearCookie(): self
     {
         $this->cookie = new CookieJar();
 
@@ -365,7 +365,7 @@ abstract class AbstractRequest
     /**
      * @return bool
      */
-    public function isVerify(): bool
+    protected function isVerify(): bool
     {
         return $this->verify;
     }
@@ -375,11 +375,67 @@ abstract class AbstractRequest
      *
      * @return AbstractRequest
      */
-    public function setVerify(bool $verify = false): self
+    protected function setVerify(bool $verify = false): self
     {
         $this->verify = $verify;
 
         return $this;
+    }
+
+    /**
+     * @return Response
+     */
+    public function get(): Response
+    {
+        $this->setHttpMethod('GET');
+        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
+
+        return $this->request();
+    }
+
+    /**
+     * @param array $params
+     *
+     * @return Response
+     */
+    public function add(array $params = []): Response
+    {
+        return $this->postRequest($params);
+    }
+
+    /**
+     * @param array $params
+     * @return Response
+     */
+    public function update(array $params = []): Response
+    {
+        return $this->postRequest($params);
+    }
+
+    /**
+     * @return AbstractRequest
+     */
+    public function clearAuth(): self
+    {
+        $this->clearCookie();
+
+        return $this;
+    }
+
+    /**
+     * @param array $params
+     *
+     * @return Response
+     */
+    protected function postRequest(array $params = []): Response
+    {
+        $this->setHttpMethod('POST');
+        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
+        $this->setBody(
+            \GuzzleHttp\json_encode($params, JSON_UNESCAPED_UNICODE)
+        );
+
+        return $this->request();
     }
 
     /**
@@ -389,7 +445,7 @@ abstract class AbstractRequest
      *
      * @return Response
      */
-    public function request($async = false)
+    protected function request($async = false)
     {
         try {
             $method = ($async) ? 'requestAsync' : 'request';

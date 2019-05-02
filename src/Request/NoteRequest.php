@@ -3,7 +3,6 @@
 namespace AmoCrm\Request;
 
 use AmoCrm\Response\NoteResponse;
-use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**
@@ -21,6 +20,10 @@ class NoteRequest extends AbstractRequest
     public function __construct(ParameterBag $parameterBag)
     {
         parent::__construct($parameterBag);
+
+        $this->setRequstUri(
+            $this->parameterBag->get('requestNote')
+        );
     }
 
     /**
@@ -31,10 +34,6 @@ class NoteRequest extends AbstractRequest
      */
     public function getNotes(array $entityData = [], array $params = []): array
     {
-        $this->setRequstUri(
-            $this->parameterBag->get('noteGet')
-        );
-
         $limit = 100;
         $offset = 0;
         $notes = [];
@@ -156,44 +155,5 @@ class NoteRequest extends AbstractRequest
         ], $params);
 
         return $this->getNotes($entityData, $params);
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    public function addNote(array $params = []): Response
-    {
-        return $this->notePostRequest($params);
-    }
-
-    /**
-     * @return NoteRequest
-     */
-    public function clearAuth(): self
-    {
-        $this->clearCookie();
-
-        return $this;
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    private function notePostRequest(array $params = []): Response
-    {
-        $this->setRequstUri(
-            $this->parameterBag->get('noteAdd')
-        );
-        $this->setHttpMethod('POST');
-        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
-        $this->setBody(
-            \GuzzleHttp\json_encode($params, JSON_UNESCAPED_UNICODE)
-        );
-
-        return $this->request();
     }
 }

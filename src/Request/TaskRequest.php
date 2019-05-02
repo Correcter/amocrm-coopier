@@ -3,7 +3,6 @@
 namespace AmoCrm\Request;
 
 use AmoCrm\Response\TaskResponse;
-use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**
@@ -21,6 +20,10 @@ class TaskRequest extends AbstractRequest
     public function __construct(ParameterBag $parameterBag)
     {
         parent::__construct($parameterBag);
+
+        $this->setRequstUri(
+            $this->parameterBag->get('requestTask')
+        );
     }
 
     /**
@@ -30,10 +33,6 @@ class TaskRequest extends AbstractRequest
      */
     public function getTasksOfDeals(array $deals = []): array
     {
-        $this->setRequstUri(
-            $this->parameterBag->get('taskGet')
-        );
-
         $dealTasks = [];
 
         foreach ($deals as $deal) {
@@ -60,54 +59,5 @@ class TaskRequest extends AbstractRequest
         }
 
         return $dealTasks;
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    public function addTask(array $params = []): Response
-    {
-        return $this->taskPostRequest($params);
-    }
-
-    /**
-     * @param array $tasksToUpdate
-     *
-     * @return Response
-     */
-    public function updateDealsStatuses(array $tasksToUpdate = []): Response
-    {
-        return $this->taskPostRequest($tasksToUpdate);
-    }
-
-    /**
-     * @return TaskRequest
-     */
-    public function clearAuth(): self
-    {
-        $this->clearCookie();
-
-        return $this;
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    private function taskPostRequest(array $params = []): Response
-    {
-        $this->setRequstUri(
-            $this->parameterBag->get('taskAdd')
-        );
-        $this->setHttpMethod('POST');
-        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
-        $this->setBody(
-            \GuzzleHttp\json_encode($params, JSON_UNESCAPED_UNICODE)
-        );
-
-        return $this->request();
     }
 }

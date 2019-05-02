@@ -41,4 +41,17 @@ class CompanyResponse
     {
         return $this->items;
     }
+
+    /**
+     * @param int|null $itemId
+     * @param array $customFields
+     */
+    public function replaceCustomFields(int $itemId = null, array $customFields = [])
+    {
+        if($this->items->containsKey($itemId)) {
+            $item = $this->items->get($itemId);
+            $item['custom_fields'] = $customFields;
+            $this->items->set($itemId, $item);
+        }
+    }
 }

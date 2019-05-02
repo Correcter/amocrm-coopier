@@ -21,6 +21,10 @@ class ContactRequest extends AbstractRequest
     public function __construct(ParameterBag $parameterBag)
     {
         parent::__construct($parameterBag);
+
+        $this->setRequstUri(
+            $this->parameterBag->get('requestContact')
+        );
     }
 
     /**
@@ -30,10 +34,6 @@ class ContactRequest extends AbstractRequest
      */
     public function getContactsOfDeals(array $deals = []): array
     {
-        $this->setRequstUri(
-            $this->parameterBag->get('contactGet')
-        );
-
         $contactsOfDeals = [];
 
         foreach ($deals as $deal) {
@@ -63,54 +63,5 @@ class ContactRequest extends AbstractRequest
         }
 
         return $contactsOfDeals;
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    public function addContact(array $params = []): Response
-    {
-        return $this->postRequest($params);
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    public function updateStatuses(array $params = []): Response
-    {
-        return $this->postRequest($params);
-    }
-
-    /**
-     * @return ContactRequest
-     */
-    public function clearAuth(): self
-    {
-        $this->clearCookie();
-
-        return $this;
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    private function postRequest(array $params = []): Response
-    {
-        $this->setRequstUri(
-            $this->parameterBag->get('contactAdd')
-        );
-        $this->setHttpMethod('POST');
-        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
-        $this->setBody(
-            \GuzzleHttp\json_encode($params, JSON_UNESCAPED_UNICODE)
-        );
-
-        return $this->request();
     }
 }

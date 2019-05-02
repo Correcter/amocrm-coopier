@@ -19,18 +19,16 @@ services:
                 targetLogin: "%target.login%"
                 targetPass: "%target.pass%"
                 targetHash: "%target.hash%"
-                dealGet: "%deal.get%"
-                dealAdd: "%deal.add%"
-                taskGet: "%task.get%"
-                taskAdd: "%task.add%"
-                companyGet: "%company.get%"
-                companyAdd: "%company.add%"
-                noteGet: "%note.get%"
-                noteAdd: "%note.add%"
-                contactGet: "%contact.get%"
-                contactAdd: "%contact.add%"
+                requestDeal: "%request.deal%"
+                requestTask: "%request.task%"
+                requestCompany: "%request.company%"
+                requestNote: "%request.note%"
+                requestContact: "%request.contact%"
+                requestCustom: "%request.custom%"
+                requestCustomer: "%request.customer%"
                 funnelGet: "%funnel.get%"
-                authPost: "%auth.post%"
+                funnelAdd: "%funnel.add%"
+                requestAuth: "%request.auth%"
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -59,23 +57,53 @@ services:
         arguments:
           - "@amo.params"
 
+    AmoCrm\Request\CustomFieldsRequest:
+        arguments:
+          - "@amo.params"
+
     AmoCrm\Request\NoteRequest:
         arguments:
           - "@amo.params"
 
-    AmoCrm\Service\DealManager:
+
+    AmoCrm\Service\DealService:
+        arguments: ~
+
+    AmoCrm\Service\CompanyService:
+        arguments: ~
+
+    AmoCrm\Service\ContactService:
+        arguments: ~
+
+    AmoCrm\Service\TaskService:
+        arguments: ~
+
+    AmoCrm\Service\NoteService:
+        arguments: ~
+
+
+    AmoCrm\Manager\ServiceManager:
         arguments:
-          - "@doctrine.orm.entity_manager"
+          - "@AmoCrm\\Service\\DealService"
+          - "@AmoCrm\\Service\\CompanyService"
+          - "@AmoCrm\\Service\\ContactService"
+          - "@AmoCrm\\Service\\TaskService"
+          - "@AmoCrm\\Request\\NoteService"
+          - "@AmoCrm\\Request\\AuthRequest"
+          - "@AmoCrm\\Request\\DealRequest"
+          - "@AmoCrm\\Request\\FunnelRequest"
+          - "@AmoCrm\\Request\\TaskRequest"
+          - "@AmoCrm\\Request\\ContactRequest"
+          - "@AmoCrm\\Request\\CompanyRequest"
+          - "@AmoCrm\\Request\\CustomFieldsRequest"
+          - "@AmoCrm\\Request\\NoteRequest"
+
+    AmoCrm\Main:
+        arguments:
+          - "@AmoCrm\\Manager\\ServiceManager"
 
     AmoCrm\Command\:
         arguments:
-            - "@AmoCrm\\Service\\DealManager"
-            - "@AmoCrm\\Request\\AuthRequest"
-            - "@AmoCrm\\Request\\DealRequest"
-            - "@AmoCrm\\Request\\FunnelRequest"
-            - "@AmoCrm\\Request\\TaskRequest"
-            - "@AmoCrm\\Request\\ContactRequest"
-            - "@AmoCrm\\Request\\CompanyRequest"
-            - "@AmoCrm\\Request\\NoteRequest"
+          - "@AmoCrm\\Main"
         resource: '../../src/Command/*Command.php'
         tags: ["console.command"]

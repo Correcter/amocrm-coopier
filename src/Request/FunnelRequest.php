@@ -25,15 +25,26 @@ class FunnelRequest extends AbstractRequest
     /**
      * @return Response
      */
-    public function getFunnel()
+    public function get(): Response
     {
         $this->setRequstUri(
             $this->parameterBag->get('funnelGet')
         );
-        $this->setHttpMethod('GET');
-        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
 
-        return $this->request();
+        return parent::get();
+    }
+
+    /**
+     * @param array $params
+     * @return Response
+     */
+    public function add(array $params = []): Response
+    {
+        $this->setRequstUri(
+            $this->parameterBag->get('funnelAdd')
+        );
+
+        return parent::add($params);
     }
 
     /**
@@ -42,7 +53,7 @@ class FunnelRequest extends AbstractRequest
      *
      * @return null|int
      */
-    public function getFunnelIdByFunnelName(Response $response = null, string $funnelName = null)
+    public function getFunnelIdByFunnelName(Response $response = null, string $funnelName = null): ?int
     {
         $result = $response->getBody()->getContents();
 
@@ -69,33 +80,5 @@ class FunnelRequest extends AbstractRequest
         unset($basicFunnels);
 
         return null;
-    }
-
-    /**
-     * @param array $params
-     * @param null  $method
-     *
-     * @return \GuzzleHttp\Psr7\Response
-     */
-    public function addFunnel(array $params = [], $method = null)
-    {
-        $this->setRequstUri('/private/api/v2/json/pipelines/set');
-        $this->setHttpMethod($method);
-        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
-        $this->setBody(
-            \GuzzleHttp\json_encode($params, JSON_UNESCAPED_UNICODE)
-        );
-
-        return $this->request();
-    }
-
-    /**
-     * @return FunnelRequest
-     */
-    public function clearAuth(): self
-    {
-        $this->clearCookie();
-
-        return $this;
     }
 }

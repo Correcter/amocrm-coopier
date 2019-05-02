@@ -21,6 +21,10 @@ class CompanyRequest extends AbstractRequest
     public function __construct(ParameterBag $parameterBag)
     {
         parent::__construct($parameterBag);
+
+        $this->setRequstUri(
+            $this->parameterBag->get('requestCompany')
+        );
     }
 
     /**
@@ -30,12 +34,7 @@ class CompanyRequest extends AbstractRequest
      */
     public function getCompaniesOfDeals(array $deals = []): array
     {
-        $this->setRequstUri(
-            $this->parameterBag->get('companyGet')
-        );
-
         $companiesOfDeal = [];
-
         foreach ($deals as $deal) {
             if (!isset($deal['company']['id'])) {
                 continue;
@@ -61,56 +60,6 @@ class CompanyRequest extends AbstractRequest
                     )
                 );
         }
-
         return $companiesOfDeal;
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    public function addCompany(array $params = []): Response
-    {
-        return $this->postRequest($params);
-    }
-
-    /**
-     * @param array $companiesToUpdate
-     *
-     * @return Response
-     */
-    public function updateCompany(array $companiesToUpdate = []): Response
-    {
-        return $this->postRequest($companiesToUpdate);
-    }
-
-    /**
-     * @return CompanyRequest
-     */
-    public function clearAuth(): self
-    {
-        $this->clearCookie();
-
-        return $this;
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    private function postRequest(array $params = []): Response
-    {
-        $this->setRequstUri(
-            $this->parameterBag->get('companyAdd')
-        );
-        $this->setHttpMethod('POST');
-        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
-        $this->setBody(
-            \GuzzleHttp\json_encode($params, JSON_UNESCAPED_UNICODE)
-        );
-
-        return $this->request();
     }
 }

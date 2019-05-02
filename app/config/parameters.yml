@@ -15,15 +15,13 @@ parameters:
     target.hash: b85f7aac44825172bb4c1e904a84fbd8212c0350
     host.basic: 'https://icontextall.amocrm.ru'
     host.target: 'https://new5832c10517fd6.amocrm.ru'
-    auth.post: /private/api/auth.php
-    deal.get: /api/v2/leads
-    deal.add: /api/v2/leads
-    task.add: /api/v2/tasks
-    task.get: /api/v2/tasks
-    company.add: /api/v2/companies
-    company.get: /api/v2/companies
-    contact.add: /api/v2/contacts
-    contact.get: /api/v2/contacts
-    note.add: /api/v2/notes
-    note.get: /api/v2/notes
+    request.auth: /private/api/auth.php
+    request.deal: /api/v2/leads
+    request.task: /api/v2/tasks
+    request.company: /api/v2/companies
+    request.contact: /api/v2/contacts
+    request.custom: /api/v2/fields
+    request.customer: /api/v2/customers
+    request.note: /api/v2/notes
     funnel.get: /api/v2/pipelines
+    funnel.add: /private/api/v2/json/pipelines/set

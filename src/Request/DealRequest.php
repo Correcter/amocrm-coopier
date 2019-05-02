@@ -20,6 +20,10 @@ class DealRequest extends AbstractRequest
     public function __construct(ParameterBag $parameterBag)
     {
         parent::__construct($parameterBag);
+
+        $this->setRequstUri(
+            $this->parameterBag->get('requestDeal')
+        );
     }
 
     /**
@@ -30,10 +34,6 @@ class DealRequest extends AbstractRequest
      */
     public function getDealsByFunnelId(int $funnelId = null, int $statusId = null): array
     {
-        $this->setRequstUri(
-            $this->parameterBag->get('dealGet')
-        );
-
         $limit = 100;
         $offset = 0;
         $actualDeals = [];
@@ -87,54 +87,5 @@ class DealRequest extends AbstractRequest
         } while ($requestBody->getSize());
 
         return $actualDeals;
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    public function addDeal(array $params = []): Response
-    {
-        return $this->dealPostRequest($params);
-    }
-
-    /**
-     * @param array $dealsToUpdate
-     *
-     * @return Response
-     */
-    public function updateDealsStatuses(array $dealsToUpdate = []): Response
-    {
-        return $this->dealPostRequest($dealsToUpdate);
-    }
-
-    /**
-     * @return DealRequest
-     */
-    public function clearAuth(): self
-    {
-        $this->clearCookie();
-
-        return $this;
-    }
-
-    /**
-     * @param array $params
-     *
-     * @return Response
-     */
-    private function dealPostRequest(array $params = []): Response
-    {
-        $this->setRequstUri(
-            $this->parameterBag->get('dealAdd')
-        );
-        $this->setHttpMethod('POST');
-        $this->addHeader('Content-Type', 'application/json; charset=utf-8');
-        $this->setBody(
-            \GuzzleHttp\json_encode($params, JSON_UNESCAPED_UNICODE)
-        );
-
-        return $this->request();
     }
 }

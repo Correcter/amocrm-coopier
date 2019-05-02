@@ -4,6 +4,7 @@ namespace AmoCrm\Request;
 
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
+use AmoCrm\Exceptions\AuthError;
 
 /**
  * Class AuthRequest.
@@ -20,6 +21,10 @@ class AuthRequest extends AbstractRequest
     public function __construct(ParameterBag $parameterBag)
     {
         parent::__construct($parameterBag);
+
+        $this->setRequstUri(
+            $this->parameterBag->get('requestAuth')
+        );
     }
 
     /**
@@ -30,10 +35,6 @@ class AuthRequest extends AbstractRequest
      */
     public function auth(string $loginType = null, $accountType = null): Response
     {
-        $this->setRequstUri(
-           $this->parameterBag->get('authPost')
-        );
-
         $this->setHttpMethod('POST');
         $this->setFormParams([
             'USER_LOGIN' => $this->parameterBag->get($loginType),
@@ -44,15 +45,5 @@ class AuthRequest extends AbstractRequest
         ]);
 
         return $this->request();
-    }
-
-    /**
-     * @return AuthRequest
-     */
-    public function clearAuth(): self
-    {
-        $this->clearCookie();
-
-        return $this;
     }
 }
