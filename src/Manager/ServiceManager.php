@@ -121,7 +121,6 @@ class ServiceManager extends RequestManager {
         return true;
     }
 
-
     /**
      * @return void
      */
@@ -145,7 +144,7 @@ class ServiceManager extends RequestManager {
         $this->targetData->setNotesOfDeals(
             $this->noteService->buildNotesToTarget(
                 $this->targetData->getResultDeals(),
-                $this->basicData->getSocioramaDeals(),
+                $this->basicData->getOldNotesOfDeals(),
                 $operationType
             )
         );
@@ -154,7 +153,7 @@ class ServiceManager extends RequestManager {
         $this->targetData->setNotesOfTasks(
             $this->noteService->buildNotesToTarget(
                 $this->targetData->getResultTasks(),
-                $this->basicData->getOldTasks(),
+                $this->basicData->getOldNotesOfTasks(),
                 $operationType
             )
         );
@@ -163,7 +162,7 @@ class ServiceManager extends RequestManager {
         $this->targetData->setNotesOfContacts(
             $this->noteService->buildNotesToTarget(
                 $this->targetData->getResultContacts(),
-                $this->basicData->getOldContacts(),
+                $this->basicData->getOldNotesOfContacts(),
                 $operationType
             )
         );
@@ -172,31 +171,34 @@ class ServiceManager extends RequestManager {
         $this->targetData->setNotesOfCompanies(
             $this->noteService->buildNotesToTarget(
                 $this->targetData->getResultCompanies(),
-                $this->basicData->getOldCompanies(),
+                $this->basicData->getOldNotesOfCompanies(),
                 $operationType
             )
         );
+
+//        dump(
+//            $this->targetData->getNotesOfDeals(),
+//            $this->targetData->getNotesOfTasks(),
+//            $this->targetData->getNotesOfContacts(),
+//            $this->targetData->getNotesOfCompanies()
+//            );
+//        exit;
+
     }
 
 
     /**
-     * @param string|null $operationType
-     *
      * @return void
      */
-    public function buildContactsToTarget(string $operationType = null): void
+    public function buildContactsToTarget(): void
     {
-        if(!$operationType) {
-            throw new \InvalidArgumentException('Тип операции для построения массива контактов не определен!');
-        }
-
         $this->targetData->setContactsToTarget(
             $this->contactService->buildContactsToTarget(
-                $operationType,
                 [
                     'resultDeals' => $this->targetData->getResultDeals(),
                     'oldContacts' => $this->basicData->getOldContacts(),
                     'resultCompanies' => $this->targetData->getResultCompanies(),
+                    'allContacts' => $this->basicData->getAllContacts()
                 ]
             )
         );
@@ -204,23 +206,30 @@ class ServiceManager extends RequestManager {
 
 
     /**
-     * @param string|null $operationType
-     *
      * @return void
      */
-    public function buildCompaniesToTarget(string $operationType = null): void
+    public function buildCompaniesToTarget(): void
     {
-        if(!$operationType) {
-            throw new \InvalidArgumentException('Тип операции для построения массива компаний не определен!');
-        }
+
+        dump(
+            $this->basicData->getAllCompanies(),
+            $this->companyService->buildCompaniesToTarget(
+            [
+                'resultDeals' => $this->targetData->getResultDeals(),
+                'oldCompanies' => $this->basicData->getOldCompanies(),
+                'resultContacts' => $this->targetData->getResultContacts(),
+                'allCompanies' => $this->basicData->getAllCompanies()
+            ]
+        ));
+        exit;
 
         $this->targetData->setCompaniesToTarget(
             $this->companyService->buildCompaniesToTarget(
-                $operationType,
                 [
                     'resultDeals' => $this->targetData->getResultDeals(),
                     'oldCompanies' => $this->basicData->getOldCompanies(),
                     'resultContacts' => $this->targetData->getResultContacts(),
+                    'allCompanies' => $this->basicData->getAllCompanies()
                 ]
             )
         );

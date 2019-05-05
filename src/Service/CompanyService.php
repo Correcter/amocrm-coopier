@@ -4,6 +4,7 @@ namespace AmoCrm\Service;
 
 use AmoCrm\Response\CompanyResponse;
 use AmoCrm\Response\CustomFieldsResponse;
+use AmoCrm\Response\DealResponse;
 
 /**
  * Class CompanyService.
@@ -106,18 +107,36 @@ class CompanyService
         return $deals;
     }
 
+
     /**
-     * @param null|string $operationType
-     * @param array       $arrayOfParams
-     *
+     * @param CompanyResponse|null $allCompanies
+     * @param array $oldCompanies
      * @return array
      */
-    public function buildCompaniesToTarget(string $operationType = null, array $arrayOfParams = []): array
+    public function getCompaniesToUpdate(CompanyResponse $allCompanies = null, array $oldCompanies = []): array
     {
-        if (!$operationType) {
-            throw new \RuntimeException('Тип операций с компаниями не указан');
-        }
+        $updateCompanies = [];
+            foreach ($allCompanies->getItems() as $fromCompany) {
+                foreach ($oldCompanies as $oldDealId => $oldCompany) {
+                    foreach ($oldCompany->getItems() as $toCompany) {
+                        if ($fromCompany['name'] === $toCompany['name']) {
+                            $updateCompanies[$oldDealId][$toCompany['id']] = 'update';
+                        }
+                    }
+                }
+            }
 
+
+        return $updateCompanies;
+    }
+
+
+    /**
+     * @param array $arrayOfParams
+     * @return array
+     */
+    public function buildCompaniesToTarget(array $arrayOfParams = []): array
+    {
         if (!isset($arrayOfParams['resultDeals'])) {
             throw new \RuntimeException('Сделки для компаний не определены');
         }
@@ -126,25 +145,36 @@ class CompanyService
             throw new \RuntimeException('Старые компании не определены');
         }
 
-        if (!isset($arrayOfParams['resultContacts'])) {
-            throw new \RuntimeException('Новые контакты не определены');
+        if(!isset($arrayOfParams['allCompanies'])) {
+            throw new \RuntimeException('Для построения дерева компаний необходимы все имеющиеся компании пользователя');
         }
+
+        $companiesToUpdate =
+            $this->getCompaniesToUpdate(
+                $arrayOfParams['allCompanies'],
+                $arrayOfParams['oldCompanies']
+            );
 
         $toTargetCompanies = [];
         foreach ($arrayOfParams['oldCompanies'] as $oldDealId => $companyItems) {
             foreach ($companyItems->getItems() as $company) {
                 $dealIds = [];
                 $contactIds = [];
-                if (!isset($arrayOfParams['resultDeals'][$oldDealId]['_embedded']['items'])) {
+                $operationType = 'add';
+
+                if (!isset($arrayOfParams['resultDeals'][$oldDealId]) ||
+                    !($arrayOfParams['resultDeals'][$oldDealId] instanceof DealResponse)) {
                     throw new \RuntimeException('Невозможно обновить контакты. Сделка пуста');
                 }
 
-                foreach ($arrayOfParams['resultDeals'][$oldDealId]['_embedded']['items'] as $deal) {
+                foreach ($arrayOfParams['resultDeals'][$oldDealId]->getItems() as $deal) {
                     $dealIds[] = $deal['id'];
                 }
 
-                foreach ($arrayOfParams['resultContacts'][$oldDealId]->getItems() as $contact) {
-                    $contactIds[] = $contact['id'];
+                if (isset($arrayOfParams['resultContacts'][$oldDealId])) {
+                    foreach ($arrayOfParams['resultContacts'][$oldDealId]->getItems() as $contact) {
+                        $contactIds[] = $contact['id'];
+                    }
                 }
 
                 $companyTags = [];
@@ -155,7 +185,11 @@ class CompanyService
                     $companyTags = implode(',', $companyTags);
                 }
 
-                $toTargetCompanies[$oldDealId]['add'][] = [
+                if(isset($companiesToUpdate[$oldDealId][$company['id']])) {
+                    $operationType = 'update';
+                }
+
+                $toTargetCompanies[$oldDealId][$operationType][] = [
                     'name' => $company['name'],
                     'created_at' => $company['created_at'],
                     'updated_at' => $company['updated_at'],
@@ -164,7 +198,7 @@ class CompanyService
                     'tags' => $companyTags,
                     'leads_id' => implode(',', $dealIds),
                     'customers_id' => implode(',', $company['customers']['id'] ?? []),
-                    'contacts_id' => $contactIds,
+                    'contacts_id' => implode(',', $contactIds),
                     'custom_fields' => $company['custom_fields'],
                 ];
             }

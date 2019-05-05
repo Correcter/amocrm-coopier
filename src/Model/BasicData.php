@@ -1,6 +1,8 @@
 <?php
 
 namespace AmoCrm\Model;
+use AmoCrm\Response\CompanyResponse;
+use AmoCrm\Response\ContactResponse;
 
 /**
  * Description of BasicData.
@@ -55,10 +57,22 @@ class BasicData
     private $oldNotesOfCompanies;
 
     /**
+     * @var array
+     */
+    private $allContacts;
+
+    /**
+     * @var array
+     */
+    private $allCompanies;
+
+    /**
      * BasicData constructor.
      */
     public function __construct()
     {
+        $this->allContacts  = new ContactResponse();
+        $this->allCompanies  = new CompanyResponse();
         $this->socioramaDeals  = [];
         $this->oldTasks  = [];
         $this->oldContacts  = [];
@@ -122,6 +136,44 @@ class BasicData
     public function setOldTasks(array $oldTasks = []): self
     {
         $this->oldTasks = $oldTasks;
+
+        return $this;
+    }
+
+    /**
+     * @return ContactResponse
+     */
+    public function getAllContacts(): ContactResponse
+    {
+        return $this->allContacts;
+    }
+
+    /**
+     * @param ContactResponse|null $allContacts
+     * @return BasicData
+     */
+    public function setAllContacts(ContactResponse $allContacts = null): self
+    {
+        $this->allContacts = $allContacts;
+
+        return $this;
+    }
+
+    /**
+     * @return CompanyResponse
+     */
+    public function getAllCompanies(): CompanyResponse
+    {
+        return $this->allCompanies;
+    }
+
+    /**
+     * @param CompanyResponse|null $allCompanies
+     * @return BasicData
+     */
+    public function setAllCompanies(CompanyResponse $allCompanies = null): self
+    {
+        $this->allCompanies = $allCompanies;
 
         return $this;
     }

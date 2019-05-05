@@ -1,6 +1,7 @@
 <?php
 
 namespace AmoCrm\Service;
+use AmoCrm\Response\DealResponse;
 
 /**
  * Class TaskService.
@@ -15,15 +16,16 @@ class TaskService
      *
      * @return array
      */
-    public function buildTasksToTarget(array $newDeals = [], array $oldTasks = null): array
+    public function buildTasksToTarget(array $newDeals = [], array $oldTasks = []): array
     {
         $toTargetTasks = [];
+
         foreach ($newDeals as $oldDealId => $newDeal) {
-            if (!isset($newDeal['_embedded']['items'])) {
-                throw new \RuntimeException('Сделка пуста');
+            if (!($newDeal instanceof DealResponse)) {
+                throw new \RuntimeException('Сделка невалидна');
             }
 
-            foreach ($newDeal['_embedded']['items'] as $deal) {
+            foreach ($newDeal->getItems() as $deal) {
                 if (!isset($oldTasks[$oldDealId])) {
                     continue;
                 }

@@ -27,6 +27,45 @@ class CompanyRequest extends AbstractRequest
         );
     }
 
+
+    /**
+     * @param array $allDeals
+     * @return CompanyResponse
+     */
+    public function getCompanyByUserId(array $allDeals = []): CompanyResponse
+    {
+        foreach ($allDeals as $deals) {
+            foreach ($deals->getItems() as $deal) {
+
+                if (!isset($deal['responsible_user_id'])) {
+                    throw new \RuntimeException('Отсутствует идентификатор ответственного пользователя');
+                }
+
+                $this->setQueryParams([
+                    'responsible_user_id' => $deal['responsible_user_id'],
+                ]);
+                $this->setHttpMethod('GET');
+
+                $companyResult = $this->request()->getBody()->getContents();
+
+                if (!$companyResult) {
+                    continue;
+                }
+
+                return
+                    new CompanyResponse(
+                        \GuzzleHttp\json_decode(
+                            $companyResult,
+                            true,
+                            JSON_UNESCAPED_UNICODE
+                        )
+                    );
+            }
+        }
+
+        return new CompanyResponse();
+    }
+
     /**
      * @param array $deals
      *

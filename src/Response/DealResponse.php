@@ -2,43 +2,18 @@
 
 namespace AmoCrm\Response;
 
-use Doctrine\Common\Collections\ArrayCollection;
-
 /**
- * Description of DealResponse.
- *
- * @author Vitaly Dergunov <v.dergunov@icontext.ru>
+ * Class DealResponse
+ * @package AmoCrm\Response
  */
-class DealResponse
+class DealResponse extends AbstractResponse
 {
     /**
-     * @var null|ArrayCollection
-     */
-    private $items;
-
-    /**
-     * LeadInfo constructor.
-     *
+     * DealResponse constructor.
      * @param array $mapData
      */
     public function __construct(array $mapData = [])
     {
-        if (!isset($mapData['_embedded']['items'])) {
-            throw new \RuntimeException('Невалидный ответ от сервера!');
-        }
-        $this->items = new ArrayCollection();
-        foreach ($mapData['_embedded']['items'] as $key => $val) {
-            if (!$this->items->contains($val)) {
-                $this->items->set((int) $key, $val);
-            }
-        }
-    }
-
-    /**
-     * @return ArrayCollection
-     */
-    public function getItems(): ArrayCollection
-    {
-        return $this->items;
+        parent::__construct($mapData);
     }
 }

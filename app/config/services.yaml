@@ -88,7 +88,7 @@ services:
           - "@AmoCrm\\Service\\CompanyService"
           - "@AmoCrm\\Service\\ContactService"
           - "@AmoCrm\\Service\\TaskService"
-          - "@AmoCrm\\Request\\NoteService"
+          - "@AmoCrm\\Service\\NoteService"
           - "@AmoCrm\\Request\\AuthRequest"
           - "@AmoCrm\\Request\\DealRequest"
           - "@AmoCrm\\Request\\FunnelRequest"

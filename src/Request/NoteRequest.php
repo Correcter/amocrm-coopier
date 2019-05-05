@@ -40,6 +40,7 @@ class NoteRequest extends AbstractRequest
 
         foreach ($entityData as $oldNodeId => $node) {
             foreach ($node->getItems() as $item) {
+
                 $this->setQueryParams([
                     'type' => $params['type'], // contact/lead/company/task
                     'element_id' => $item['id'],

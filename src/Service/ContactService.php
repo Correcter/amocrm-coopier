@@ -3,6 +3,7 @@
 namespace AmoCrm\Service;
 use AmoCrm\Response\ContactResponse;
 use AmoCrm\Response\CustomFieldsResponse;
+use AmoCrm\Response\DealResponse;
 
 /**
  * Class ContactService.
@@ -105,18 +106,41 @@ class ContactService
         return $deals;
     }
 
+
     /**
-     * @param string|null $operationType
+     * @param ContactResponse|null $allContacts
+     * @param array $oldContacts
+     * @return array
+     */
+    private function getContactsToUpdate(ContactResponse $allContacts = null, array $oldContacts = []): array
+    {
+        $updateContacts = [];
+        foreach ($allContacts->getItems() as $fromContact) {
+            foreach ($oldContacts as $oldDealId => $oldContact) {
+                foreach ($oldContact->getItems() as $toContact) {
+
+                    $fromCompany = $fromContact['company']['name'] ?? null;
+                    $toCompany = $toContact['company']['name'] ?? null;
+
+                    if ($fromContact['name'] === $toContact['name'] &&
+                        $fromCompany === $toCompany
+                    ) {
+                        $updateContacts[$oldDealId][$toContact['id']] = 'update';
+                    }
+                }
+            }
+        }
+
+        return $updateContacts;
+    }
+
+    /**
      * @param array $arrayOfParams
      * @return array
      */
-    public function buildContactsToTarget(string $operationType = null, array $arrayOfParams = []): array
+    public function buildContactsToTarget(array $arrayOfParams = []): array
     {
         $toTargetContacts = [];
-
-        if (!$operationType) {
-            throw new \RuntimeException('Тип операций с контактами не указан');
-        }
 
         if(!isset($arrayOfParams['resultDeals'])) {
             throw new \RuntimeException('Сделки для контактов не определены');
@@ -126,14 +150,28 @@ class ContactService
             throw new \RuntimeException('Контакты для компании не определены');
         }
 
+        if(!isset($arrayOfParams['allContacts'])) {
+            throw new \RuntimeException('Для построения дерева контактов необходимы все имеющиеся контакты пользователя');
+        }
+
+        $contactsToUpdate =
+            $this->getContactsToUpdate(
+                $arrayOfParams['allContacts'],
+                $arrayOfParams['oldContacts']
+            );
+
         foreach ($arrayOfParams['oldContacts']  as $oldDealId => $contactItems) {
             foreach ($contactItems->getItems() as $contact) {
                 $dealIds = [];
-                if (!isset($arrayOfParams['resultDeals'][$oldDealId]['_embedded']['items'])) {
-                    throw new \RuntimeException('Невозможно обновить контакты. Сделка пуста');
+                $companyIds = [];
+                $operationType = 'add';
+
+                if (!isset($arrayOfParams['resultDeals'][$oldDealId]) ||
+                    !($arrayOfParams['resultDeals'][$oldDealId] instanceof DealResponse)) {
+                    throw new \RuntimeException('Сделки не существует или невалидный объект');
                 }
 
-                foreach ($arrayOfParams['resultDeals'][$oldDealId]['_embedded']['items'] as $deal) {
+                foreach ($arrayOfParams['resultDeals'][$oldDealId]->getItems() as $deal) {
                     $dealIds[] = $deal['id'];
                 }
 
@@ -145,11 +183,15 @@ class ContactService
                     $contactTags = implode(',', $contactTags);
                 }
 
-                if($arrayOfParams['resultCompanies']) {
-                    dump($arrayOfParams['resultCompanies']);
-
+                if(isset($arrayOfParams['resultCompanies'][$oldDealId])) {
+                    foreach ($arrayOfParams['resultCompanies'][$oldDealId]->getItems() as $company) {
+                        $companyIds[] = $company['id'];
+                    }
                 }
 
+                if(isset($contactsToUpdate[$oldDealId][$contact['id']])) {
+                    $operationType = 'update';
+                }
 
                 $toTargetContacts[$oldDealId][$operationType][] = [
                     'name' => $contact['name'],
@@ -161,7 +203,7 @@ class ContactService
                     'tags' => $contactTags,
                     'leads_id' => implode(',', $dealIds),
                     'customers_id' => implode(',', $contact['customers']['id'] ?? []),
-                    'company_id' => $contact['company']['id'] ?? null,
+                    'company_id' => implode(',', $companyIds),
                     'custom_fields' => $contact['custom_fields'],
                 ];
             }

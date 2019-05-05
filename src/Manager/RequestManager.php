@@ -162,13 +162,13 @@ class RequestManager extends AbstractManager {
         );
 
 
-        dump(
-            $this->basicData->getOldNotesOfDeals(),
-            $this->basicData->getOldNotesOfContacts(),
-            $this->basicData->getOldNotesOfTasks(),
-            $this->basicData->getOldNotesOfCompanies()
-        );
-        exit;
+//        dump(
+//            $this->basicData->getOldNotesOfDeals(),
+//            $this->basicData->getOldNotesOfContacts(),
+//            $this->basicData->getOldNotesOfTasks(),
+//            $this->basicData->getOldNotesOfCompanies()
+//        );
+//        exit;
 
     }
 
@@ -187,6 +187,25 @@ class RequestManager extends AbstractManager {
         $this->targetData->setFunnelId($funnelId);
         $this->targetData->setTargetFunnelDeals(
             $this->dealRequest->getDealsByFunnelId($funnelId)
+        );
+    }
+
+
+    /**
+     * @return void
+     */
+    public function setUpDependenciesOfDeals(): void
+    {
+        $this->basicData->setAllContacts(
+            $this->contactRequest->getContactsByUserId(
+                $this->targetData->getResultDeals()
+            )
+        );
+
+        $this->basicData->setAllCompanies(
+            $this->companyRequest->getCompanyByUserId(
+                $this->targetData->getResultDeals()
+            )
         );
     }
 
@@ -268,7 +287,7 @@ class RequestManager extends AbstractManager {
                      $this->targetData->getNotesOfCompanies()
                  ] as $notes) {
             foreach ($notes as $dealId => $note) {
-                $resultNotes[$dealId] = new CustomFieldsResponse(
+                $resultNotes[$dealId] = new NoteResponse(
                     \GuzzleHttp\json_decode(
                         $this
                             ->noteRequest
@@ -375,7 +394,7 @@ class RequestManager extends AbstractManager {
         $dealsResult = [];
         foreach ($this->targetData->getDealsToTargetFunnel() as $oldDealId => $deal)
         {
-            $dealsResult[$oldDealId] =
+            $dealsResult[$oldDealId] = new DealResponse(
                 \GuzzleHttp\json_decode(
                     $this
                         ->dealRequest
@@ -384,10 +403,13 @@ class RequestManager extends AbstractManager {
                         ->getContents(),
                     true,
                     JSON_UNESCAPED_UNICODE
-                );
+                )
+            );
         }
 
-        $this->targetData->setResultDeals($dealsResult);
+        $this->targetData->setResultDeals(
+            $this->dealRequest->getDealsById($dealsResult)
+        );
         unset($dealsResult);
     }
 
@@ -416,6 +438,7 @@ class RequestManager extends AbstractManager {
     }
 
     /**
+     * // !!!!!!!!!!!!!!!!!!!!!!!!
      * @return void
      */
     public function companyRequest(): void
@@ -428,6 +451,8 @@ class RequestManager extends AbstractManager {
                     ->add($comp)
                     ->getBody()
                     ->getContents();
+
+            dump($comp, $companyResult);
 
             if (!$companyResult) {
                 continue;

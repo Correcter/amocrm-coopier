@@ -2,6 +2,7 @@
 
 namespace AmoCrm\Request;
 
+use AmoCrm\Response\DealResponse;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
@@ -25,6 +26,46 @@ class DealRequest extends AbstractRequest
             $this->parameterBag->get('requestDeal')
         );
     }
+
+
+    /**
+     * @param array $customDeals
+     * @return array
+     */
+    public function getDealsById(array $customDeals = []) {
+
+        $resultDeals = [];
+        foreach ($customDeals as $oldDealId => $deals) {
+            foreach ($deals->getItems() as $deal) {
+                if (!isset($deal['id'])) {
+                    throw new \RuntimeException('Отсутствует идентификатор ответственного пользователя');
+                }
+
+                $this->setQueryParams([
+                    'id' => $deal['id'],
+                ]);
+                $this->setHttpMethod('GET');
+
+                $dealsResponse = $this->request()->getBody()->getContents();
+
+                if (!$dealsResponse) {
+                    continue;
+                }
+
+                $resultDeals[$oldDealId] =
+                    new DealResponse(
+                        \GuzzleHttp\json_decode(
+                            $dealsResponse,
+                            true,
+                            JSON_UNESCAPED_UNICODE
+                        )
+                    );
+            }
+        }
+
+        return $resultDeals;
+    }
+
 
     /**
      * @param null|int $funnelId

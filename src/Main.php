@@ -37,21 +37,30 @@ class Main {
 
             if ($this->serviceManager->ifNeedToAdd()) {
 
-                $this->serviceManager->buildCustomFields();
-                $this->serviceManager->customFieldsOfDealsRequest();
-                $this->serviceManager->customFieldsOfContactsRequest();
-                $this->serviceManager->customFieldsOfCompanyRequest();
-                $this->serviceManager->updateCustomFields();
+//                $this->serviceManager->buildCustomFields();
+//                $this->serviceManager->customFieldsOfDealsRequest();
+//                $this->serviceManager->customFieldsOfContactsRequest();
+//                $this->serviceManager->customFieldsOfCompanyRequest();
+//                $this->serviceManager->updateCustomFields();
 
                 $this->serviceManager->dealRequest();
-                $this->serviceManager->buildTasksToTarget();
-                $this->serviceManager->tasksRequest();
-                $this->serviceManager->buildContactsToTarget('add');
-                $this->serviceManager->contactRequest();
-                $this->serviceManager->buildCompaniesToTarget('add');
+                $this->serviceManager->setUpDependenciesOfDeals();
+//                $this->serviceManager->buildTasksToTarget();
+//                $this->serviceManager->tasksRequest();
+
+
+                $this->serviceManager->buildCompaniesToTarget();
                 $this->serviceManager->companyRequest();
-                $this->serviceManager->buildContactsToTarget('update');
+
+                $this->serviceManager->buildContactsToTarget();
                 $this->serviceManager->contactRequest();
+
+                $this->serviceManager->buildCompaniesToTarget();
+                $this->serviceManager->companyRequest();
+
+                $this->serviceManager->buildContactsToTarget();
+                $this->serviceManager->contactRequest();
+
                 $this->serviceManager->buildNotesToTarget('add');
                 $this->serviceManager->notesRequest();
                 return true;
