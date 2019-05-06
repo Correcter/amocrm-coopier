@@ -2,26 +2,25 @@
 
 namespace AmoCrm\Manager;
 
-use AmoCrm\Service\CompanyService;
-use AmoCrm\Service\ContactService;
-use AmoCrm\Service\DealService;
-use AmoCrm\Service\TaskService;
-use AmoCrm\Service\NoteService;
 use AmoCrm\Request\AuthRequest;
 use AmoCrm\Request\CompanyRequest;
 use AmoCrm\Request\ContactRequest;
+use AmoCrm\Request\CustomFieldsRequest;
 use AmoCrm\Request\DealRequest;
 use AmoCrm\Request\FunnelRequest;
 use AmoCrm\Request\NoteRequest;
 use AmoCrm\Request\TaskRequest;
-use AmoCrm\Request\CustomFieldsRequest;
+use AmoCrm\Service\CompanyService;
+use AmoCrm\Service\ContactService;
+use AmoCrm\Service\DealService;
+use AmoCrm\Service\NoteService;
+use AmoCrm\Service\TaskService;
 
 /**
- * Class ServiceManager
- * @package AmoCrm\Manager
+ * Class ServiceManager.
  */
-class ServiceManager extends RequestManager {
-
+class ServiceManager extends RequestManager
+{
     /**
      * @var DealService
      */
@@ -49,19 +48,20 @@ class ServiceManager extends RequestManager {
 
     /**
      * ServiceManager constructor.
-     * @param DealService $dealService
-     * @param CompanyService $companyService
-     * @param ContactService $contactService
-     * @param TaskService $taskService
-     * @param NoteService $noteService
-     * @param AuthRequest $authRequest
-     * @param DealRequest $dealRequest
-     * @param FunnelRequest $funnelRequest
-     * @param TaskRequest $taskRequest
-     * @param ContactRequest $contactRequest
-     * @param CompanyRequest $companyRequest
+     *
+     * @param DealService         $dealService
+     * @param CompanyService      $companyService
+     * @param ContactService      $contactService
+     * @param TaskService         $taskService
+     * @param NoteService         $noteService
+     * @param AuthRequest         $authRequest
+     * @param DealRequest         $dealRequest
+     * @param FunnelRequest       $funnelRequest
+     * @param TaskRequest         $taskRequest
+     * @param ContactRequest      $contactRequest
+     * @param CompanyRequest      $companyRequest
      * @param CustomFieldsRequest $customFieldsRequest
-     * @param NoteRequest $noteRequest
+     * @param NoteRequest         $noteRequest
      */
     public function __construct(
         DealService $dealService,
@@ -77,8 +77,7 @@ class ServiceManager extends RequestManager {
         CompanyRequest $companyRequest,
         CustomFieldsRequest $customFieldsRequest,
         NoteRequest $noteRequest
-    )
-    {
+    ) {
         $this->dealService = $dealService;
         $this->companyService = $companyService;
         $this->contactService = $contactService;
@@ -112,7 +111,7 @@ class ServiceManager extends RequestManager {
             );
 
         if (!$dealsToTargetFunnel) {
-           return false;
+            return false;
         }
 
         $this->targetData->setDealsToTargetFunnel($dealsToTargetFunnel);
@@ -121,9 +120,6 @@ class ServiceManager extends RequestManager {
         return true;
     }
 
-    /**
-     * @return void
-     */
     public function buildTasksToTarget(): void
     {
         $this->targetData->setTasksToTarget(
@@ -134,9 +130,8 @@ class ServiceManager extends RequestManager {
         );
     }
 
-
     /**
-     * @param string|null $operationType
+     * @param null|string $operationType
      */
     public function buildNotesToTarget(string $operationType = null): void
     {
@@ -183,45 +178,51 @@ class ServiceManager extends RequestManager {
 //            $this->targetData->getNotesOfCompanies()
 //            );
 //        exit;
-
     }
 
-
-    /**
-     * @return void
-     */
     public function buildContactsToTarget(): void
     {
+        dump(
+            $this->basicData->getAllContacts(),
+            $this->basicData->getOldContacts(),
+            $this->contactService->buildContactsToTarget(
+                [
+                    'resultDeals' => $this->targetData->getResultDeals(),
+                    'oldContacts' => $this->basicData->getOldContacts(),
+                    'resultCompanies' => $this->targetData->getResultCompanies(),
+                    'allContacts' => $this->basicData->getAllContacts(),
+                ]
+            )
+        );
+        exit;
+
         $this->targetData->setContactsToTarget(
             $this->contactService->buildContactsToTarget(
                 [
                     'resultDeals' => $this->targetData->getResultDeals(),
                     'oldContacts' => $this->basicData->getOldContacts(),
                     'resultCompanies' => $this->targetData->getResultCompanies(),
-                    'allContacts' => $this->basicData->getAllContacts()
+                    'allContacts' => $this->basicData->getAllContacts(),
                 ]
             )
         );
     }
 
-
-    /**
-     * @return void
-     */
     public function buildCompaniesToTarget(): void
     {
-
-        dump(
-            $this->basicData->getAllCompanies(),
-            $this->companyService->buildCompaniesToTarget(
-            [
-                'resultDeals' => $this->targetData->getResultDeals(),
-                'oldCompanies' => $this->basicData->getOldCompanies(),
-                'resultContacts' => $this->targetData->getResultContacts(),
-                'allCompanies' => $this->basicData->getAllCompanies()
-            ]
-        ));
-        exit;
+//        dump(
+//            $this->basicData->getOldCompanies(),
+//            $this->basicData->getAllCompanies(),
+//            $this->companyService->buildCompaniesToTarget(
+//            [
+//                'resultDeals' => $this->targetData->getResultDeals(),
+//                'oldCompanies' => $this->basicData->getOldCompanies(),
+//                'resultContacts' => $this->targetData->getResultContacts(),
+//                'allCompanies' => $this->basicData->getAllCompanies(),
+//            ]
+//        )
+//        );
+//        exit;
 
         $this->targetData->setCompaniesToTarget(
             $this->companyService->buildCompaniesToTarget(
@@ -229,16 +230,12 @@ class ServiceManager extends RequestManager {
                     'resultDeals' => $this->targetData->getResultDeals(),
                     'oldCompanies' => $this->basicData->getOldCompanies(),
                     'resultContacts' => $this->targetData->getResultContacts(),
-                    'allCompanies' => $this->basicData->getAllCompanies()
+                    'allCompanies' => $this->basicData->getAllCompanies(),
                 ]
             )
         );
     }
 
-
-    /**
-     * @return void
-     */
     public function buildCustomFields(): void
     {
         // Собираем дополнительные поля сделок
@@ -263,15 +260,22 @@ class ServiceManager extends RequestManager {
         );
     }
 
-    /**
-     * @return void
-     */
     public function updateCustomFields(): void
     {
+        dump(
+            $this->basicData->getOldContacts(),
+            $this->targetData->getCustomFieldsOfContacts(),
+            $this->contactService->updateCustomFields(
+                $this->basicData->getOldContacts(),
+                $this->targetData->getCustomFieldsOfContacts()
+            )
+        );
+        exit;
+
         // Обновим дополнительные поля сделок
         $this->targetData->setDealsToTargetFunnel(
             $this->dealService->updateCustomFields(
-                $this->basicData->getSocioramaDeals(),
+                $this->targetData->getDealsToTargetFunnel(),
                 $this->targetData->getCustomFieldsOfDeals()
             )
         );
@@ -293,13 +297,8 @@ class ServiceManager extends RequestManager {
         );
     }
 
-
     /**
-     * UPDATE OPERATIONS
-     */
-
-    /**
-     * @return void
+     * UPDATE OPERATIONS.
      */
     public function buildBasicFromTargetStatuses(): void
     {
@@ -316,20 +315,19 @@ class ServiceManager extends RequestManager {
      */
     public function hasDealsToUpdate(): bool
     {
-        return 0 ===  count($this->targetData->getDealsToTargetFunnel())? false : true;
+        return 0 === count($this->targetData->getDealsToTargetFunnel()) ? false : true;
     }
-
 
     /**
      * @return string
      */
     public function buildCopyStat(): string
     {
-        $mess = "Добавлено сделок: " . count($this->targetData->getResultDeals()) . "\n";
-        $mess.= "Добавлено задач: " . count($this->targetData->getResultTasks()). "\n";
-        $mess.= "Добавлено компаний: " . count($this->targetData->getResultCompanies()) . "\n";
-        $mess.= "Добавлено контактов: " . count($this->targetData->getResultContacts()) . "\n";
+        $mess = 'Добавлено сделок: '.count($this->targetData->getResultDeals())."\n";
+        $mess .= 'Добавлено задач: '.count($this->targetData->getResultTasks())."\n";
+        $mess .= 'Добавлено компаний: '.count($this->targetData->getResultCompanies())."\n";
+        $mess .= 'Добавлено контактов: '.count($this->targetData->getResultContacts())."\n";
+
         return $mess;
     }
-
 }

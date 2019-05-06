@@ -1,6 +1,7 @@
 <?php
 
 namespace AmoCrm\Service;
+
 use AmoCrm\Response\ContactResponse;
 use AmoCrm\Response\CustomFieldsResponse;
 use AmoCrm\Response\DealResponse;
@@ -14,45 +15,44 @@ class ContactService
 {
     /**
      * @param array $contacts
+     *
      * @return array
      */
     public function buildCustomFields(array $contacts = []): array
     {
-
         $contactsCustomFields = [];
         foreach ($contacts as $contact) {
-
-            if(!($contact instanceof ContactResponse)) {
+            if (!($contact instanceof ContactResponse)) {
                 throw new \InvalidArgumentException('Невалидный объект контактов!');
             }
 
             foreach ($contact->getItems() as $item) {
-
                 if (!isset($item['custom_fields'])) {
                     continue;
                 }
 
                 foreach ($item['custom_fields'] as $customFields) {
-
                     $enums = [];
                     foreach ($customFields['values'] as $value) {
                         $enums[] = $value['value'];
                     }
 
                     switch ($customFields['name']) {
-                        case 'Email' :
+                        case 'Email':
                             $fieldType = 8; // 1
                             break;
-                        case 'Сайт' :
+                        case 'Сайт':
                             $fieldType = 7;
+
                             break;
-                        case 'Телефон' :
+                        case 'Телефон':
                             $fieldType = 8; // 1
                             break;
-                        case 'Должность' :
+                        case 'Должность':
                             $fieldType = 1;
+
                             break;
-                        case 'Мгн. сообщения' :
+                        case 'Мгн. сообщения':
                             $fieldType = 8; // 1
                             break;
                         default:
@@ -63,9 +63,9 @@ class ContactService
                         'name' => $customFields['name'],
                         'field_type' => $fieldType, // MULTISELECT
                         'element_type' => 1, // Контакт
-                        'origin' => md5($customFields['id'] . $customFields['name']),
+                        'origin' => md5($customFields['id'].$customFields['name']),
                         'is_editable' => true,
-                        'enums' => $enums
+                        'enums' => $enums,
                     ];
                 }
             }
@@ -75,82 +75,54 @@ class ContactService
     }
 
     /**
-     * @param array $deals
+     * @param array $oldContacts
      * @param array $newCustomFields
      * @return array
      */
-    public function updateCustomFields(array $deals = [], array $newCustomFields = []): array
+    public function updateCustomFields(array $oldContacts = [], array $newCustomFields = []): array
     {
-        foreach ($deals as $dkey => $contacts) {
-            foreach ($contacts->getItems() as $ckey => $contact) {
-
-                if(!isset($contact['custom_fields'])) {
+        foreach ($oldContacts as $ckey => $contacts) {
+            foreach ($contacts->getItems() as $cindex => $contact) {
+                if (!isset($contact['custom_fields'])) {
                     continue;
                 }
 
-                foreach ($contact['custom_fields'] as $customFields) {
-
-                    if(isset($newCustomFields[$dkey][$customFields['id']]) &&
-                        $newCustomFields[$dkey][$customFields['id']] instanceof CustomFieldsResponse) {
-
-                        foreach($newCustomFields[$dkey][$customFields['id']]->getItems() as $item) {
+                foreach ($contact['custom_fields'] as $cfindex => $customFields) {
+                    if (isset($newCustomFields[$contact['id']][$customFields['id']]) &&
+                        $newCustomFields[$contact['id']][$customFields['id']] instanceof CustomFieldsResponse) {
+                        foreach ($newCustomFields[$contact['id']][$customFields['id']]->getItems() as $item) {
                             $customFields['id'] = $item['id'];
-                            $contacts->replaceCustomFields($ckey, $customFields);
+                            $contact['custom_fields'][$cfindex] = $customFields;
                         }
                     }
                 }
+                $contacts->replaceCustomFields($cindex, $contact['custom_fields']);
             }
-            $deals[$dkey] = $contacts;
+            $oldContacts[$ckey] = $contacts;
         }
 
-        return $deals;
-    }
-
-
-    /**
-     * @param ContactResponse|null $allContacts
-     * @param array $oldContacts
-     * @return array
-     */
-    private function getContactsToUpdate(ContactResponse $allContacts = null, array $oldContacts = []): array
-    {
-        $updateContacts = [];
-        foreach ($allContacts->getItems() as $fromContact) {
-            foreach ($oldContacts as $oldDealId => $oldContact) {
-                foreach ($oldContact->getItems() as $toContact) {
-
-                    $fromCompany = $fromContact['company']['name'] ?? null;
-                    $toCompany = $toContact['company']['name'] ?? null;
-
-                    if ($fromContact['name'] === $toContact['name'] &&
-                        $fromCompany === $toCompany
-                    ) {
-                        $updateContacts[$oldDealId][$toContact['id']] = 'update';
-                    }
-                }
-            }
-        }
-
-        return $updateContacts;
+        return $oldContacts;
     }
 
     /**
      * @param array $arrayOfParams
+     *
      * @return array
      */
     public function buildContactsToTarget(array $arrayOfParams = []): array
     {
         $toTargetContacts = [];
+        $customContacts = [];
 
-        if(!isset($arrayOfParams['resultDeals'])) {
+        if (!isset($arrayOfParams['resultDeals'])) {
             throw new \RuntimeException('Сделки для контактов не определены');
         }
 
-        if(!isset($arrayOfParams['oldContacts'])) {
+        if (!isset($arrayOfParams['oldContacts'])) {
             throw new \RuntimeException('Контакты для компании не определены');
         }
 
-        if(!isset($arrayOfParams['allContacts'])) {
+        if (!isset($arrayOfParams['allContacts'])) {
             throw new \RuntimeException('Для построения дерева контактов необходимы все имеющиеся контакты пользователя');
         }
 
@@ -183,14 +155,20 @@ class ContactService
                     $contactTags = implode(',', $contactTags);
                 }
 
-                if(isset($arrayOfParams['resultCompanies'][$oldDealId])) {
+                if (isset($arrayOfParams['resultCompanies'][$oldDealId])) {
                     foreach ($arrayOfParams['resultCompanies'][$oldDealId]->getItems() as $company) {
                         $companyIds[] = $company['id'];
                     }
                 }
 
-                if(isset($contactsToUpdate[$oldDealId][$contact['id']])) {
+                $contactKey = $contact['name'].$contact['company']['name'] ?? null;
+
+                if (isset($contactsToUpdate[$oldDealId][$contact['id']]) || isset($customContacts[$contactKey])) {
                     $operationType = 'update';
+                }
+
+                if ('add' === $operationType) {
+                    $customContacts[$contactKey] = $contact['name'];
                 }
 
                 $toTargetContacts[$oldDealId][$operationType][] = [
@@ -210,5 +188,32 @@ class ContactService
         }
 
         return $toTargetContacts;
+    }
+
+    /**
+     * @param null|ContactResponse $allContacts
+     * @param array                $oldContacts
+     *
+     * @return array
+     */
+    private function getContactsToUpdate(ContactResponse $allContacts = null, array $oldContacts = []): array
+    {
+        $updateContacts = [];
+        foreach ($allContacts->getItems() as $fromContact) {
+            foreach ($oldContacts as $oldDealId => $oldContact) {
+                foreach ($oldContact->getItems() as $toContact) {
+                    $fromCompany = $fromContact['company']['name'] ?? null;
+                    $toCompany = $toContact['company']['name'] ?? null;
+
+                    if ($fromContact['name'] === $toContact['name'] &&
+                        $fromCompany === $toCompany
+                    ) {
+                        $updateContacts[$oldDealId][$toContact['id']] = 'update';
+                    }
+                }
+            }
+        }
+
+        return $updateContacts;
     }
 }

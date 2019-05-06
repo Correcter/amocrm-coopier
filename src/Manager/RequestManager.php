@@ -2,31 +2,27 @@
 
 namespace AmoCrm\Manager;
 
+use AmoCrm\Exceptions\AuthError;
 use AmoCrm\Request\AuthRequest;
 use AmoCrm\Request\CompanyRequest;
 use AmoCrm\Request\ContactRequest;
+use AmoCrm\Request\CustomFieldsRequest;
 use AmoCrm\Request\DealRequest;
 use AmoCrm\Request\FunnelRequest;
 use AmoCrm\Request\NoteRequest;
 use AmoCrm\Request\TaskRequest;
-use AmoCrm\Request\CustomFieldsRequest;
-use AmoCrm\Response\TaskResponse;
-use AmoCrm\Response\CustomerResponse;
 use AmoCrm\Response\CompanyResponse;
+use AmoCrm\Response\ContactResponse;
+use AmoCrm\Response\CustomFieldsResponse;
 use AmoCrm\Response\DealResponse;
 use AmoCrm\Response\NoteResponse;
-use AmoCrm\Response\CustomFieldsResponse;
-use AmoCrm\Response\FunnelResponse;
-use AmoCrm\Response\ContactResponse;
-
-use AmoCrm\Exceptions\AuthError;
+use AmoCrm\Response\TaskResponse;
 
 /**
- * Class RequestManager
- * @package AmoCrm\Manager
+ * Class RequestManager.
  */
-class RequestManager extends AbstractManager {
-
+class RequestManager extends AbstractManager
+{
     /**
      * @var AuthRequest
      */
@@ -69,14 +65,15 @@ class RequestManager extends AbstractManager {
 
     /**
      * RequestManager constructor.
-     * @param AuthRequest $authRequest
-     * @param DealRequest $dealRequest
-     * @param FunnelRequest $funnelRequest
-     * @param TaskRequest $taskRequest
-     * @param ContactRequest $contactRequest
-     * @param CompanyRequest $companyRequest
+     *
+     * @param AuthRequest         $authRequest
+     * @param DealRequest         $dealRequest
+     * @param FunnelRequest       $funnelRequest
+     * @param TaskRequest         $taskRequest
+     * @param ContactRequest      $contactRequest
+     * @param CompanyRequest      $companyRequest
      * @param CustomFieldsRequest $customFieldsRequest
-     * @param NoteRequest $noteRequest
+     * @param NoteRequest         $noteRequest
      */
     public function __construct(
         AuthRequest $authRequest,
@@ -100,9 +97,6 @@ class RequestManager extends AbstractManager {
         parent::__construct();
     }
 
-    /**
-     * @return void
-     */
     public function copyBasicDataInitialize(): void
     {
         $this->basicHostsSetUp();
@@ -161,7 +155,6 @@ class RequestManager extends AbstractManager {
             )
         );
 
-
 //        dump(
 //            $this->basicData->getOldNotesOfDeals(),
 //            $this->basicData->getOldNotesOfContacts(),
@@ -169,15 +162,10 @@ class RequestManager extends AbstractManager {
 //            $this->basicData->getOldNotesOfCompanies()
 //        );
 //        exit;
-
     }
 
-    /**
-     * @return void
-     */
     public function copyTargetDataInitialize(): void
     {
-
         $this->targetHostsSetUp();
         $this->amoAuth('targetLogin', 'targetHash');
         $this->cookiesSetUp();
@@ -190,10 +178,6 @@ class RequestManager extends AbstractManager {
         );
     }
 
-
-    /**
-     * @return void
-     */
     public function setUpDependenciesOfDeals(): void
     {
         $this->basicData->setAllContacts(
@@ -209,13 +193,8 @@ class RequestManager extends AbstractManager {
         );
     }
 
-
-    /**
-     * @return void
-     */
     public function updateBasicDataInitialize(): void
     {
-
         $this->basicHostsSetUp();
         $this->amoAuth('basicLogin', 'basicHash');
         $this->cookiesSetUp();
@@ -228,12 +207,8 @@ class RequestManager extends AbstractManager {
         );
     }
 
-    /**
-     * @return void
-     */
     public function updateTargetDataInitialize(): void
     {
-
         $this->targetHostsSetUp();
         $this->amoAuth('targetLogin', 'targetHash');
         $this->cookiesSetUp();
@@ -246,37 +221,6 @@ class RequestManager extends AbstractManager {
         );
     }
 
-
-    /**
-     * @param null $login
-     * @param null $hash
-     * @return bool
-     * @throws AuthError
-     */
-    private function amoAuth($login = null, $hash = null): bool
-    {
-        $objectResponse = new \AmoCrm\Response\AuthResponse(
-            \GuzzleHttp\json_decode(
-                $this->authRequest
-                    ->auth($login, $hash)
-                    ->getBody()
-                    ->getContents(),
-                true,
-                JSON_UNESCAPED_UNICODE
-            )
-        );
-
-        if ($objectResponse->getError()) {
-            throw new AuthError($objectResponse->getError());
-        }
-
-        return true;
-    }
-
-
-    /**
-     * @return void
-     */
     public function notesRequest(): void
     {
         $resultNotes = [];
@@ -284,7 +228,7 @@ class RequestManager extends AbstractManager {
                      $this->targetData->getNotesOfDeals(),
                      $this->targetData->getNotesOfTasks(),
                      $this->targetData->getNotesOfContacts(),
-                     $this->targetData->getNotesOfCompanies()
+                     $this->targetData->getNotesOfCompanies(),
                  ] as $notes) {
             foreach ($notes as $dealId => $note) {
                 $resultNotes[$dealId] = new NoteResponse(
@@ -305,9 +249,6 @@ class RequestManager extends AbstractManager {
         unset($resultNotes);
     }
 
-    /**
-     * @return void
-     */
     public function customFieldsOfContactsRequest(): void
     {
         $customFieldsOfContacts = [];
@@ -331,10 +272,6 @@ class RequestManager extends AbstractManager {
         unset($customFieldsOfContacts);
     }
 
-
-    /**
-     * @return void
-     */
     public function customFieldsOfCompanyRequest(): void
     {
         $customFieldsOfCompany = [];
@@ -358,10 +295,6 @@ class RequestManager extends AbstractManager {
         unset($customFieldsOfCompany);
     }
 
-
-    /**
-     * @return void
-     */
     public function customFieldsOfDealsRequest(): void
     {
         $customFieldsOfDeals = [];
@@ -385,15 +318,10 @@ class RequestManager extends AbstractManager {
         unset($customFieldsOfDeals);
     }
 
-
-    /**
-     * @return void
-     */
     public function dealRequest(): void
     {
         $dealsResult = [];
-        foreach ($this->targetData->getDealsToTargetFunnel() as $oldDealId => $deal)
-        {
+        foreach ($this->targetData->getDealsToTargetFunnel() as $oldDealId => $deal) {
             $dealsResult[$oldDealId] = new DealResponse(
                 \GuzzleHttp\json_decode(
                     $this
@@ -413,9 +341,6 @@ class RequestManager extends AbstractManager {
         unset($dealsResult);
     }
 
-    /**
-     * @return void
-     */
     public function tasksRequest(): void
     {
         $newTasks = [];
@@ -439,7 +364,6 @@ class RequestManager extends AbstractManager {
 
     /**
      * // !!!!!!!!!!!!!!!!!!!!!!!!
-     * @return void
      */
     public function companyRequest(): void
     {
@@ -472,9 +396,6 @@ class RequestManager extends AbstractManager {
         unset($newCompanies);
     }
 
-    /**
-     * @return void
-     */
     public function contactRequest(): void
     {
         $newContacts = [];
@@ -497,6 +418,46 @@ class RequestManager extends AbstractManager {
         unset($newContacts);
     }
 
+    public function clearAuth(): void
+    {
+        $this->noteRequest->clearAuth();
+        $this->authRequest->clearAuth();
+        $this->dealRequest->clearAuth();
+        $this->funnelRequest->clearAuth();
+        $this->taskRequest->clearAuth();
+        $this->contactRequest->clearAuth();
+        $this->companyRequest->clearAuth();
+        $this->customFieldsRequest->clearAuth();
+    }
+
+    /**
+     * @param null $login
+     * @param null $hash
+     *
+     * @throws AuthError
+     *
+     * @return bool
+     */
+    private function amoAuth($login = null, $hash = null): bool
+    {
+        $objectResponse = new \AmoCrm\Response\AuthResponse(
+            \GuzzleHttp\json_decode(
+                $this->authRequest
+                    ->auth($login, $hash)
+                    ->getBody()
+                    ->getContents(),
+                true,
+                JSON_UNESCAPED_UNICODE
+            )
+        );
+
+        if ($objectResponse->getError()) {
+            throw new AuthError($objectResponse->getError());
+        }
+
+        return true;
+    }
+
     /**
      * @param null|string $funnelName
      *
@@ -511,9 +472,6 @@ class RequestManager extends AbstractManager {
             );
     }
 
-    /**
-     * @return void
-     */
     private function basicHostsSetUp(): void
     {
         $this->authRequest->createClient('basicHost');
@@ -526,9 +484,6 @@ class RequestManager extends AbstractManager {
         $this->noteRequest->createClient('basicHost');
     }
 
-    /**
-     * @return void
-     */
     private function targetHostsSetUp(): void
     {
         $this->authRequest->createClient('targetHost');
@@ -541,9 +496,6 @@ class RequestManager extends AbstractManager {
         $this->noteRequest->createClient('targetHost');
     }
 
-    /**
-     * @return void
-     */
     private function cookiesSetUp(): void
     {
         $this->funnelRequest->setCookie(
@@ -573,20 +525,5 @@ class RequestManager extends AbstractManager {
         $this->customFieldsRequest->setCookie(
             $this->authRequest->getCookie()
         );
-    }
-
-    /**
-     * @return void
-     */
-    public function clearAuth(): void
-    {
-        $this->noteRequest->clearAuth();
-        $this->authRequest->clearAuth();
-        $this->dealRequest->clearAuth();
-        $this->funnelRequest->clearAuth();
-        $this->taskRequest->clearAuth();
-        $this->contactRequest->clearAuth();
-        $this->companyRequest->clearAuth();
-        $this->customFieldsRequest->clearAuth();
     }
 }

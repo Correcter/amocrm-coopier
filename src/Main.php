@@ -2,15 +2,14 @@
 
 namespace AmoCrm;
 
-use AmoCrm\Manager\ServiceManager;
 use AmoCrm\Exceptions\AuthError;
+use AmoCrm\Manager\ServiceManager;
 
 /**
- * Class MainManager
- * @package AmoCrm\Manager
+ * Class MainManager.
  */
-class Main {
-
+class Main
+{
     /**
      * @var ServiceManager
      */
@@ -18,6 +17,7 @@ class Main {
 
     /**
      * MainManager constructor.
+     *
      * @param ServiceManager $serviceManager
      */
     public function __construct(ServiceManager $serviceManager)
@@ -36,22 +36,20 @@ class Main {
             $this->serviceManager->copyTargetDataInitialize();
 
             if ($this->serviceManager->ifNeedToAdd()) {
-
-//                $this->serviceManager->buildCustomFields();
+                $this->serviceManager->buildCustomFields();
 //                $this->serviceManager->customFieldsOfDealsRequest();
-//                $this->serviceManager->customFieldsOfContactsRequest();
+                $this->serviceManager->customFieldsOfContactsRequest();
 //                $this->serviceManager->customFieldsOfCompanyRequest();
-//                $this->serviceManager->updateCustomFields();
+                $this->serviceManager->updateCustomFields();
+
+                exit;
 
                 $this->serviceManager->dealRequest();
                 $this->serviceManager->setUpDependenciesOfDeals();
+
 //                $this->serviceManager->buildTasksToTarget();
 //                $this->serviceManager->tasksRequest();
 
-
-                $this->serviceManager->buildCompaniesToTarget();
-                $this->serviceManager->companyRequest();
-
                 $this->serviceManager->buildContactsToTarget();
                 $this->serviceManager->contactRequest();
 
@@ -60,17 +58,21 @@ class Main {
 
                 $this->serviceManager->buildContactsToTarget();
                 $this->serviceManager->contactRequest();
+
+                $this->serviceManager->buildCompaniesToTarget();
+                $this->serviceManager->companyRequest();
 
                 $this->serviceManager->buildNotesToTarget('add');
                 $this->serviceManager->notesRequest();
+
                 return true;
             }
 
             return false;
-        } catch(AuthError $exc) {
+        } catch (AuthError $exc) {
             echo $exc->getMessage();
             exit;
-        } catch(\InvalidArgumentException $exc) {
+        } catch (\InvalidArgumentException $exc) {
             echo $exc->getMessage();
             exit;
         }
@@ -87,14 +89,16 @@ class Main {
             $this->serviceManager->updateTargetDataInitialize();
             $this->serviceManager->buildBasicFromTargetStatuses();
 
-            if($this->serviceManager->hasDealsToUpdate()) {
+            if ($this->serviceManager->hasDealsToUpdate()) {
                 $this->serviceManager->dealRequest();
+
                 return true;
             }
+
             return false;
-        } catch(AuthError $exc) {
+        } catch (AuthError $exc) {
             echo $exc->getMessage();
-        } catch(\InvalidArgumentException $exc) {
+        } catch (\InvalidArgumentException $exc) {
             echo $exc->getMessage();
         }
     }
@@ -102,7 +106,8 @@ class Main {
     /**
      * @return null|string
      */
-    public function getCopyResult(): ?string {
+    public function getCopyResult(): ?string
+    {
         return $this->serviceManager->buildCopyStat();
     }
 }

@@ -156,6 +156,8 @@ class CompanyService
             );
 
         $toTargetCompanies = [];
+        $customCompanies = [];
+
         foreach ($arrayOfParams['oldCompanies'] as $oldDealId => $companyItems) {
             foreach ($companyItems->getItems() as $company) {
                 $dealIds = [];
@@ -185,8 +187,12 @@ class CompanyService
                     $companyTags = implode(',', $companyTags);
                 }
 
-                if(isset($companiesToUpdate[$oldDealId][$company['id']])) {
+                if(isset($companiesToUpdate[$oldDealId][$company['id']]) || isset($customCompanies[$company['name']])) {
                     $operationType = 'update';
+                }
+
+                if ('add' === $operationType) {
+                    $customCompanies[$company['name']] = $company['name'];
                 }
 
                 $toTargetCompanies[$oldDealId][$operationType][] = [
