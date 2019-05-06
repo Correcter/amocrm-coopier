@@ -74,37 +74,34 @@ class CompanyService
         return $companiesCustomFields;
     }
 
-
     /**
-     * @param array $deals
+     * @param array $oldCompanies
      * @param array $newCustomFields
      * @return array
      */
-    public function updateCustomFields(array $deals = [], array $newCustomFields = []): array
+    public function updateCustomFields(array $oldCompanies = [], array $newCustomFields = []): array
     {
-        foreach ($deals as $dkey => $contacts) {
-            foreach ($contacts->getItems() as $ckey => $contact) {
-
-                if(!isset($contact['custom_fields'])) {
+        foreach ($oldCompanies as $ckey => $companies) {
+            foreach ($companies->getItems() as $cindex => $company) {
+                if (!isset($company['custom_fields'])) {
                     continue;
                 }
 
-                foreach ($contact['custom_fields'] as $customFields) {
-
-                    if(isset($newCustomFields[$dkey][$customFields['id']]) &&
-                        $newCustomFields[$dkey][$customFields['id']] instanceof CustomFieldsResponse) {
-
-                        foreach($newCustomFields[$dkey][$customFields['id']]->getItems() as $item) {
+                foreach ($company['custom_fields'] as $cfindex => $customFields) {
+                    if (isset($newCustomFields[$company['id']][$customFields['id']]) &&
+                        $newCustomFields[$company['id']][$customFields['id']] instanceof CustomFieldsResponse) {
+                        foreach ($newCustomFields[$company['id']][$customFields['id']]->getItems() as $item) {
                             $customFields['id'] = $item['id'];
-                            $contacts->replaceCustomFields($ckey, $customFields);
+                            $company['custom_fields'][$cfindex] = $customFields;
                         }
                     }
                 }
+                $companies->replaceCustomFields($cindex, $company['custom_fields']);
             }
-            $deals[$dkey] = $contacts;
+            $oldCompanies[$ckey] = $companies;
         }
 
-        return $deals;
+        return $oldCompanies;
     }
 
 

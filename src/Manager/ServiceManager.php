@@ -182,20 +182,6 @@ class ServiceManager extends RequestManager
 
     public function buildContactsToTarget(): void
     {
-        dump(
-            $this->basicData->getAllContacts(),
-            $this->basicData->getOldContacts(),
-            $this->contactService->buildContactsToTarget(
-                [
-                    'resultDeals' => $this->targetData->getResultDeals(),
-                    'oldContacts' => $this->basicData->getOldContacts(),
-                    'resultCompanies' => $this->targetData->getResultCompanies(),
-                    'allContacts' => $this->basicData->getAllContacts(),
-                ]
-            )
-        );
-        exit;
-
         $this->targetData->setContactsToTarget(
             $this->contactService->buildContactsToTarget(
                 [
@@ -210,20 +196,6 @@ class ServiceManager extends RequestManager
 
     public function buildCompaniesToTarget(): void
     {
-//        dump(
-//            $this->basicData->getOldCompanies(),
-//            $this->basicData->getAllCompanies(),
-//            $this->companyService->buildCompaniesToTarget(
-//            [
-//                'resultDeals' => $this->targetData->getResultDeals(),
-//                'oldCompanies' => $this->basicData->getOldCompanies(),
-//                'resultContacts' => $this->targetData->getResultContacts(),
-//                'allCompanies' => $this->basicData->getAllCompanies(),
-//            ]
-//        )
-//        );
-//        exit;
-
         $this->targetData->setCompaniesToTarget(
             $this->companyService->buildCompaniesToTarget(
                 [
@@ -262,16 +234,6 @@ class ServiceManager extends RequestManager
 
     public function updateCustomFields(): void
     {
-        dump(
-            $this->basicData->getOldContacts(),
-            $this->targetData->getCustomFieldsOfContacts(),
-            $this->contactService->updateCustomFields(
-                $this->basicData->getOldContacts(),
-                $this->targetData->getCustomFieldsOfContacts()
-            )
-        );
-        exit;
-
         // Обновим дополнительные поля сделок
         $this->targetData->setDealsToTargetFunnel(
             $this->dealService->updateCustomFields(

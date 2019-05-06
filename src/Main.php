@@ -37,18 +37,16 @@ class Main
 
             if ($this->serviceManager->ifNeedToAdd()) {
                 $this->serviceManager->buildCustomFields();
-//                $this->serviceManager->customFieldsOfDealsRequest();
+                $this->serviceManager->customFieldsOfDealsRequest();
                 $this->serviceManager->customFieldsOfContactsRequest();
-//                $this->serviceManager->customFieldsOfCompanyRequest();
+                $this->serviceManager->customFieldsOfCompanyRequest();
                 $this->serviceManager->updateCustomFields();
-
-                exit;
 
                 $this->serviceManager->dealRequest();
                 $this->serviceManager->setUpDependenciesOfDeals();
 
-//                $this->serviceManager->buildTasksToTarget();
-//                $this->serviceManager->tasksRequest();
+                $this->serviceManager->buildTasksToTarget();
+                $this->serviceManager->tasksRequest();
 
                 $this->serviceManager->buildContactsToTarget();
                 $this->serviceManager->contactRequest();
