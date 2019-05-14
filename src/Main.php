@@ -31,19 +31,22 @@ class Main
     public function copy(): bool
     {
         try {
-            $this->serviceManager->copyBasicDataInitialize();
-            $this->serviceManager->clearAuth();
-            $this->serviceManager->copyTargetDataInitialize();
+            $this->serviceManager
+                ->copyBasicDataInitialize()
+                ->clearAuth()
+                ->copyTargetDataInitialize();
 
             if ($this->serviceManager->ifNeedToAdd()) {
                 $this->serviceManager->buildCustomFields();
-                $this->serviceManager->customFieldsOfDealsRequest();
-                $this->serviceManager->customFieldsOfContactsRequest();
-                $this->serviceManager->customFieldsOfCompanyRequest();
+                $this->serviceManager
+                    ->customFieldsOfDealsRequest()
+                    ->customFieldsOfContactsRequest()
+                    ->customFieldsOfCompanyRequest();
                 $this->serviceManager->updateCustomFields();
 
-                $this->serviceManager->dealRequest();
-                $this->serviceManager->setUpDependenciesOfDeals();
+                $this->serviceManager
+                    ->dealRequest()
+                    ->setUpDependenciesOfDeals();
 
                 $this->serviceManager->buildTasksToTarget();
                 $this->serviceManager->tasksRequest();
@@ -54,25 +57,18 @@ class Main
                 $this->serviceManager->buildCompaniesToTarget();
                 $this->serviceManager->companyRequest();
 
-                $this->serviceManager->buildContactsToTarget();
-                $this->serviceManager->contactRequest();
-
-                $this->serviceManager->buildCompaniesToTarget();
-                $this->serviceManager->companyRequest();
-
                 $this->serviceManager->buildNotesToTarget('add');
                 $this->serviceManager->notesRequest();
-
-                return true;
             }
 
-            return false;
         } catch (AuthError $exc) {
             echo $exc->getMessage();
             exit;
         } catch (\InvalidArgumentException $exc) {
             echo $exc->getMessage();
             exit;
+        } finally {
+            return true;
         }
     }
 
@@ -93,11 +89,12 @@ class Main
                 return true;
             }
 
-            return false;
         } catch (AuthError $exc) {
             echo $exc->getMessage();
         } catch (\InvalidArgumentException $exc) {
             echo $exc->getMessage();
+        } finally {
+            return false;
         }
     }
 

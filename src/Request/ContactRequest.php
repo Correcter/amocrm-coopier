@@ -3,7 +3,6 @@
 namespace AmoCrm\Request;
 
 use AmoCrm\Response\ContactResponse;
-use GuzzleHttp\Psr7\Response;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 /**

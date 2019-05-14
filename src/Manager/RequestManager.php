@@ -97,7 +97,11 @@ class RequestManager extends AbstractManager
         parent::__construct();
     }
 
-    public function copyBasicDataInitialize(): void
+
+    /**
+     * @return RequestManager
+     */
+    public function copyBasicDataInitialize(): self
     {
         $this->basicHostsSetUp();
         $this->amoAuth('basicLogin', 'basicHash');
@@ -155,16 +159,13 @@ class RequestManager extends AbstractManager
             )
         );
 
-//        dump(
-//            $this->basicData->getOldNotesOfDeals(),
-//            $this->basicData->getOldNotesOfContacts(),
-//            $this->basicData->getOldNotesOfTasks(),
-//            $this->basicData->getOldNotesOfCompanies()
-//        );
-//        exit;
+        return $this;
     }
 
-    public function copyTargetDataInitialize(): void
+    /**
+     * @return RequestManager
+     */
+    public function copyTargetDataInitialize(): self
     {
         $this->targetHostsSetUp();
         $this->amoAuth('targetLogin', 'targetHash');
@@ -176,9 +177,14 @@ class RequestManager extends AbstractManager
         $this->targetData->setTargetFunnelDeals(
             $this->dealRequest->getDealsByFunnelId($funnelId)
         );
+
+        return $this;
     }
 
-    public function setUpDependenciesOfDeals(): void
+    /**
+     * @return RequestManager
+     */
+    public function setUpDependenciesOfDeals(): self
     {
         $this->basicData->setAllContacts(
             $this->contactRequest->getContactsByUserId(
@@ -191,9 +197,14 @@ class RequestManager extends AbstractManager
                 $this->targetData->getResultDeals()
             )
         );
+
+        return $this;
     }
 
-    public function updateBasicDataInitialize(): void
+    /**
+     * @return RequestManager
+     */
+    public function updateBasicDataInitialize(): self
     {
         $this->basicHostsSetUp();
         $this->amoAuth('basicLogin', 'basicHash');
@@ -205,9 +216,14 @@ class RequestManager extends AbstractManager
         $this->basicData->setSocioramaDeals(
             $this->dealRequest->getDealsByFunnelId($funnelId)
         );
+
+        return $this;
     }
 
-    public function updateTargetDataInitialize(): void
+    /**
+     * @return RequestManager
+     */
+    public function updateTargetDataInitialize(): self
     {
         $this->targetHostsSetUp();
         $this->amoAuth('targetLogin', 'targetHash');
@@ -219,9 +235,14 @@ class RequestManager extends AbstractManager
         $this->targetData->setTargetFunnelDeals(
             $this->dealRequest->getDealsByFunnelId($funnelId)
         );
+
+        return $this;
     }
 
-    public function notesRequest(): void
+    /**
+     * @return RequestManager
+     */
+    public function notesRequest(): self
     {
         $resultNotes = [];
         foreach ([
@@ -247,9 +268,14 @@ class RequestManager extends AbstractManager
 
         $this->targetData->setResultNotes($resultNotes);
         unset($resultNotes);
+
+        return $this;
     }
 
-    public function customFieldsOfContactsRequest(): void
+    /**
+     * @return RequestManager
+     */
+    public function customFieldsOfContactsRequest(): self
     {
         $customFieldsOfContacts = [];
         foreach ($this->targetData->getCustomFieldsOfContacts() as $contactId => $contact) {
@@ -270,9 +296,14 @@ class RequestManager extends AbstractManager
 
         $this->targetData->setCustomFieldsOfContacts($customFieldsOfContacts);
         unset($customFieldsOfContacts);
+
+        return $this;
     }
 
-    public function customFieldsOfCompanyRequest(): void
+    /**
+     * @return RequestManager
+     */
+    public function customFieldsOfCompanyRequest(): self
     {
         $customFieldsOfCompany = [];
         foreach ($this->targetData->getCustomFieldsOfCompanies() as $companyId => $company) {
@@ -293,9 +324,14 @@ class RequestManager extends AbstractManager
 
         $this->targetData->setCustomFieldsOfCompanies($customFieldsOfCompany);
         unset($customFieldsOfCompany);
+
+        return $this;
     }
 
-    public function customFieldsOfDealsRequest(): void
+    /**
+     * @return RequestManager
+     */
+    public function customFieldsOfDealsRequest(): self
     {
         $customFieldsOfDeals = [];
         foreach ($this->targetData->getCustomFieldsOfDeals() as $dealId => $deal) {
@@ -316,9 +352,14 @@ class RequestManager extends AbstractManager
 
         $this->targetData->setCustomFieldsOfDeals($customFieldsOfDeals);
         unset($customFieldsOfDeals);
+
+        return $this;
     }
 
-    public function dealRequest(): void
+    /**
+     * @return RequestManager
+     */
+    public function dealRequest(): self
     {
         $dealsResult = [];
         foreach ($this->targetData->getDealsToTargetFunnel() as $oldDealId => $deal) {
@@ -339,9 +380,14 @@ class RequestManager extends AbstractManager
             $this->dealRequest->getDealsById($dealsResult)
         );
         unset($dealsResult);
+
+        return $this;
     }
 
-    public function tasksRequest(): void
+    /**
+     * @return RequestManager
+     */
+    public function tasksRequest(): self
     {
         $newTasks = [];
         foreach ($this->targetData->getTasksToTarget() as $oldDealId => $task) {
@@ -360,12 +406,14 @@ class RequestManager extends AbstractManager
 
         $this->targetData->setResultTasks($newTasks);
         unset($newTasks);
+
+        return $this;
     }
 
     /**
-     * // !!!!!!!!!!!!!!!!!!!!!!!!
+     * @return RequestManager
      */
-    public function companyRequest(): void
+    public function companyRequest(): self
     {
         $newCompanies = [];
         foreach ($this->targetData->getCompaniesToTarget() as $oldDealId => $comp) {
@@ -375,8 +423,6 @@ class RequestManager extends AbstractManager
                     ->add($comp)
                     ->getBody()
                     ->getContents();
-
-            dump($comp, $companyResult);
 
             if (!$companyResult) {
                 continue;
@@ -394,9 +440,14 @@ class RequestManager extends AbstractManager
 
         $this->targetData->setResultCompanies($newCompanies);
         unset($newCompanies);
+
+        return $this;
     }
 
-    public function contactRequest(): void
+    /**
+     * @return RequestManager
+     */
+    public function contactRequest(): self
     {
         $newContacts = [];
         foreach ($this->targetData->getContactsToTarget()  as $oldDealId => $contact) {
@@ -416,9 +467,14 @@ class RequestManager extends AbstractManager
 
         $this->targetData->setResultContacts($newContacts);
         unset($newContacts);
+
+        return $this;
     }
 
-    public function clearAuth(): void
+    /**
+     * @return RequestManager
+     */
+    public function clearAuth(): self
     {
         $this->noteRequest->clearAuth();
         $this->authRequest->clearAuth();
@@ -428,6 +484,8 @@ class RequestManager extends AbstractManager
         $this->contactRequest->clearAuth();
         $this->companyRequest->clearAuth();
         $this->customFieldsRequest->clearAuth();
+
+        return $this;
     }
 
     /**

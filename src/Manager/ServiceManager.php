@@ -120,7 +120,10 @@ class ServiceManager extends RequestManager
         return true;
     }
 
-    public function buildTasksToTarget(): void
+    /**
+     * @return ServiceManager
+     */
+    public function buildTasksToTarget(): self
     {
         $this->targetData->setTasksToTarget(
             $this->taskService->buildTasksToTarget(
@@ -128,12 +131,15 @@ class ServiceManager extends RequestManager
                 $this->basicData->getOldTasks()
             )
         );
+
+        return $this;
     }
 
     /**
-     * @param null|string $operationType
+     * @param string|null $operationType
+     * @return ServiceManager
      */
-    public function buildNotesToTarget(string $operationType = null): void
+    public function buildNotesToTarget(string $operationType = null): self
     {
         // Собираем дополнительные поля сделок
         $this->targetData->setNotesOfDeals(
@@ -171,16 +177,13 @@ class ServiceManager extends RequestManager
             )
         );
 
-//        dump(
-//            $this->targetData->getNotesOfDeals(),
-//            $this->targetData->getNotesOfTasks(),
-//            $this->targetData->getNotesOfContacts(),
-//            $this->targetData->getNotesOfCompanies()
-//            );
-//        exit;
+        return $this;
     }
 
-    public function buildContactsToTarget(): void
+    /**
+     * @return ServiceManager
+     */
+    public function buildContactsToTarget(): self
     {
         $this->targetData->setContactsToTarget(
             $this->contactService->buildContactsToTarget(
@@ -192,9 +195,14 @@ class ServiceManager extends RequestManager
                 ]
             )
         );
+
+        return $this;
     }
 
-    public function buildCompaniesToTarget(): void
+    /**
+     * @return ServiceManager
+     */
+    public function buildCompaniesToTarget(): self
     {
         $this->targetData->setCompaniesToTarget(
             $this->companyService->buildCompaniesToTarget(
@@ -206,9 +214,14 @@ class ServiceManager extends RequestManager
                 ]
             )
         );
+
+        return $this;
     }
 
-    public function buildCustomFields(): void
+    /**
+     * @return ServiceManager
+     */
+    public function buildCustomFields(): self
     {
         // Собираем дополнительные поля сделок
         $this->targetData->setCustomFieldsOfDeals(
@@ -230,9 +243,14 @@ class ServiceManager extends RequestManager
                 $this->basicData->getOldCompanies()
             )
         );
+
+        return $this;
     }
 
-    public function updateCustomFields(): void
+    /**
+     * @return ServiceManager
+     */
+    public function updateCustomFields(): self
     {
         // Обновим дополнительные поля сделок
         $this->targetData->setDealsToTargetFunnel(
@@ -257,12 +275,16 @@ class ServiceManager extends RequestManager
                 $this->targetData->getCustomFieldsOfCompanies()
             )
         );
+
+        return $this;
     }
 
     /**
      * UPDATE OPERATIONS.
+     *
+     * @return ServiceManager
      */
-    public function buildBasicFromTargetStatuses(): void
+    public function buildBasicFromTargetStatuses(): self
     {
         $this->targetData->setDealsToTargetFunnel(
             $this->dealService->updateBasicFromTarget(
@@ -270,6 +292,8 @@ class ServiceManager extends RequestManager
                 $this->targetData->getTargetFunnelDeals()
             )
         );
+
+        return $this;
     }
 
     /**
