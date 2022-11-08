@@ -1,41 +1,41 @@
 #### AmoCrmCopier.
 
-**Система для переноса и синхронизации всех возможных изменений из одного аккаунта AMOCRM в другой**
+**A system for transferring and synchronizing all possible changes from one AMOCRM account to another**
 
-*Установка и развертывание*
+*Installation and Deployment*
 
-- Для **DEV** - среды, в корневой директории проекта сделать вызов: 
+- For **DEV** - environment, make a call in the root directory of the project: 
 
 ``` composer install --no-dev```
 
-Для боевой:
+For combat:
 
 ``` composer install ```
 
-- Во время установки система запросит у вас информацию для копирования: для базового аккаунта и для боевого.
-- Установщик должен подтянуть все необходимые ``vendor`` - пакеты.
-- Отредактируйте файл с параметрами ```(.app/config/parameters.yml.dist)```, если вы хотите изменить, введенные при установке проекта данные.
+- During installation, the system will ask you for information to copy: for the base account and for the combat account.
+- The installer must pull up all the necessary `vendor` packages.
+- Edit the file with the parameters ``(.app/config/parameters.yml.dist)`` if you want to change the data entered during the installation of the project.
 
-#### Команды синхронизации
+#### Sync commands
 
-- Для синхронизации сделок со всеми связанными сущностями следует выполнить из командной строки:
+- To synchronize transactions with all related entities, run from the command line:
 
 ```bin/console basic-to-target:deal```
 
-В случае успеха будет выведен ответ слудеющего вида:
+If successful, a response of the following type will be output:
 
 ``` 
-Добавлено сделок: n
-Добавлено задач: n
-Добавлено компаний: n
-Добавлено контактов: n
-```
-- Для обновления статусов сделок из целевого аккаунта в базовый, следует выполнить:
+Added transactions: n
+Added tasks: n
+Added companies: n
+Added contacts: n
+``
+- To update the transaction statuses from the target account to the base account, you should perform:
 
 ```bin/console target-to-basic:updateStatus```
 
-- В случае успеха:
+- In case of success:
 
-``` Статусы сделок: .... успешно синхронизированны! ```
+`` Transaction statuses:.... successfully synchronized! ```
 
-- Если по каким-то причинам команда отработает с ошибками, будет выведено соответствующее исключение.
+- If for some reason the command works with errors, the corresponding exception will be thrown.
